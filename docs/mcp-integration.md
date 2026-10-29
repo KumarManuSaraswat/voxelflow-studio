@@ -77,7 +77,7 @@ Suggested prompt:
 
 The server exposes `create_minecraft_asset` and `create_animated_robot` prompts, each with a `brief` argument. The general prompt guides the assistant to design named materials and cube parts for the requested object. If an assistant retries after a timeout, it must reuse the original ID and exact parameters, or inspect that ID with `get_operation`. Do not generate another model merely because approval is pending.
 
-Current setup syntax is documented in [OpenAI's Codex MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli). This repository's stdio transport and schemas were tested using the official SDK, including a live editor workflow. Registration in a user's Codex installation and an autonomous natural-language run are not included in the recorded test results.
+Current setup syntax is documented in [OpenAI's Codex MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli). Version 0.3.2 was installed locally and a real Codex CLI prompt designed and proposed a lantern, which was applied after native Blockbench approval. See [verification](verification.md). Use an interactive chat that can ask for tool approval; a headless `never` policy cannot approve write tools. Complete ChatGPT account onboarding remains unverified.
 
 ## ChatGPT: permissions and Secure MCP Tunnel
 

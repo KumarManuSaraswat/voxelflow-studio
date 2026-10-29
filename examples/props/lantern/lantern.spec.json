@@ -1,0 +1,325 @@
+{
+  "name": "brass_festival_lantern",
+  "namespace": "festival_props",
+  "description": "Minecraft-style brass festival lantern, exactly 18 pixels tall including a square carrying handle. Twenty editable cubes grouped into base, frame, glass, cap, and handle. Dark metal base and four corner posts, brass footing and post collars, four flat amber glass-representing panels, a stepped gold top cap, and a square brass handle. Amber is a flat color only, with no real light or emissive effect.",
+  "materials": [
+    {
+      "name": "dark_metal",
+      "color": "#303238"
+    },
+    {
+      "name": "brass",
+      "color": "#B98A3D"
+    },
+    {
+      "name": "amber_glass",
+      "color": "#E99B2E"
+    },
+    {
+      "name": "gold",
+      "color": "#E4BB55"
+    }
+  ],
+  "parts": [
+    {
+      "name": "base_plate",
+      "group": "base",
+      "material": "dark_metal",
+      "from": [
+        -5,
+        0,
+        -5
+      ],
+      "to": [
+        5,
+        1,
+        5
+      ]
+    },
+    {
+      "name": "brass_footing",
+      "group": "base",
+      "material": "brass",
+      "from": [
+        -4.5,
+        1,
+        -4.5
+      ],
+      "to": [
+        4.5,
+        2,
+        4.5
+      ]
+    },
+    {
+      "name": "front_left_post",
+      "group": "frame",
+      "material": "dark_metal",
+      "from": [
+        -4.5,
+        2,
+        -4.5
+      ],
+      "to": [
+        -3.5,
+        11,
+        -3.5
+      ]
+    },
+    {
+      "name": "front_right_post",
+      "group": "frame",
+      "material": "dark_metal",
+      "from": [
+        3.5,
+        2,
+        -4.5
+      ],
+      "to": [
+        4.5,
+        11,
+        -3.5
+      ]
+    },
+    {
+      "name": "rear_left_post",
+      "group": "frame",
+      "material": "dark_metal",
+      "from": [
+        -4.5,
+        2,
+        3.5
+      ],
+      "to": [
+        -3.5,
+        11,
+        4.5
+      ]
+    },
+    {
+      "name": "rear_right_post",
+      "group": "frame",
+      "material": "dark_metal",
+      "from": [
+        3.5,
+        2,
+        3.5
+      ],
+      "to": [
+        4.5,
+        11,
+        4.5
+      ]
+    },
+    {
+      "name": "front_left_collar",
+      "group": "frame",
+      "material": "brass",
+      "from": [
+        -4.75,
+        2,
+        -4.75
+      ],
+      "to": [
+        -3.25,
+        3,
+        -3.25
+      ]
+    },
+    {
+      "name": "front_right_collar",
+      "group": "frame",
+      "material": "brass",
+      "from": [
+        3.25,
+        2,
+        -4.75
+      ],
+      "to": [
+        4.75,
+        3,
+        -3.25
+      ]
+    },
+    {
+      "name": "rear_left_collar",
+      "group": "frame",
+      "material": "brass",
+      "from": [
+        -4.75,
+        2,
+        3.25
+      ],
+      "to": [
+        -3.25,
+        3,
+        4.75
+      ]
+    },
+    {
+      "name": "rear_right_collar",
+      "group": "frame",
+      "material": "brass",
+      "from": [
+        3.25,
+        2,
+        3.25
+      ],
+      "to": [
+        4.75,
+        3,
+        4.75
+      ]
+    },
+    {
+      "name": "front_amber_panel",
+      "group": "glass",
+      "material": "amber_glass",
+      "from": [
+        -3.5,
+        2,
+        -4
+      ],
+      "to": [
+        3.5,
+        11,
+        -3.5
+      ]
+    },
+    {
+      "name": "rear_amber_panel",
+      "group": "glass",
+      "material": "amber_glass",
+      "from": [
+        -3.5,
+        2,
+        3.5
+      ],
+      "to": [
+        3.5,
+        11,
+        4
+      ]
+    },
+    {
+      "name": "left_amber_panel",
+      "group": "glass",
+      "material": "amber_glass",
+      "from": [
+        -4,
+        2,
+        -3.5
+      ],
+      "to": [
+        -3.5,
+        11,
+        3.5
+      ]
+    },
+    {
+      "name": "right_amber_panel",
+      "group": "glass",
+      "material": "amber_glass",
+      "from": [
+        3.5,
+        2,
+        -3.5
+      ],
+      "to": [
+        4,
+        11,
+        3.5
+      ]
+    },
+    {
+      "name": "gold_cap_rim",
+      "group": "cap",
+      "material": "gold",
+      "from": [
+        -5,
+        11,
+        -5
+      ],
+      "to": [
+        5,
+        12,
+        5
+      ]
+    },
+    {
+      "name": "gold_cap_crown",
+      "group": "cap",
+      "material": "gold",
+      "from": [
+        -4,
+        12,
+        -4
+      ],
+      "to": [
+        4,
+        13,
+        4
+      ]
+    },
+    {
+      "name": "handle_left",
+      "group": "handle",
+      "material": "brass",
+      "from": [
+        -2.5,
+        13,
+        -0.5
+      ],
+      "to": [
+        -1.5,
+        18,
+        0.5
+      ]
+    },
+    {
+      "name": "handle_right",
+      "group": "handle",
+      "material": "brass",
+      "from": [
+        1.5,
+        13,
+        -0.5
+      ],
+      "to": [
+        2.5,
+        18,
+        0.5
+      ]
+    },
+    {
+      "name": "handle_bottom",
+      "group": "handle",
+      "material": "brass",
+      "from": [
+        -1.5,
+        13,
+        -0.5
+      ],
+      "to": [
+        1.5,
+        14,
+        0.5
+      ]
+    },
+    {
+      "name": "handle_top",
+      "group": "handle",
+      "material": "brass",
+      "from": [
+        -1.5,
+        17,
+        -0.5
+      ],
+      "to": [
+        1.5,
+        18,
+        0.5
+      ]
+    }
+  ]
+}

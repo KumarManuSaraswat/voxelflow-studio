@@ -32,8 +32,10 @@ export type AssetSpec = z.infer<typeof AssetSpecSchema>;
 export const PropMaterialSchema = z.object({name:safeName,color:z.string().regex(/^#[0-9a-fA-F]{6}$/)}).strict();
 export const PropMaterialsSchema = z.array(PropMaterialSchema).min(1).max(16).refine(a=>new Set(a.map(m=>m.name)).size===a.length,'Material names must be unique.');
 export type PropMaterial = z.infer<typeof PropMaterialSchema>;
-const propPosition = z.tuple([z.number().min(-128).max(128),z.number().min(-128).max(128),z.number().min(-128).max(128)]);
-const propRotation = z.tuple([z.number().min(-180).max(180),z.number().min(-180).max(180),z.number().min(-180).max(180)]);
+// Homogeneous arrays serialize to a single JSON Schema `items` object. Tuple
+// schemas emit an `items` array, which some AI hosts reject during discovery.
+const propPosition = z.array(z.number().min(-128).max(128)).length(3).transform((v):V3=>[v[0],v[1],v[2]]);
+const propRotation = z.array(z.number().min(-180).max(180)).length(3).transform((v):V3=>[v[0],v[1],v[2]]);
 export const PropPartSchema = z.object({
   name:safeName,
   group:safeName.default('root'),

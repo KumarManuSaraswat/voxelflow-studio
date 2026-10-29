@@ -37,8 +37,8 @@ var AssetSpecSchema = z.object({
 }).strict();
 var PropMaterialSchema = z.object({ name: safeName, color: z.string().regex(/^#[0-9a-fA-F]{6}$/) }).strict();
 var PropMaterialsSchema = z.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
-var propPosition = z.tuple([z.number().min(-128).max(128), z.number().min(-128).max(128), z.number().min(-128).max(128)]);
-var propRotation = z.tuple([z.number().min(-180).max(180), z.number().min(-180).max(180), z.number().min(-180).max(180)]);
+var propPosition = z.array(z.number().min(-128).max(128)).length(3).transform((v) => [v[0], v[1], v[2]]);
+var propRotation = z.array(z.number().min(-180).max(180)).length(3).transform((v) => [v[0], v[1], v[2]]);
 var PropPartSchema = z.object({
   name: safeName,
   group: safeName.default("root"),

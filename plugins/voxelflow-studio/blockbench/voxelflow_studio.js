@@ -19751,8 +19751,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
   }).strict();
   var PropMaterialSchema = external_exports.object({ name: safeName, color: external_exports.string().regex(/^#[0-9a-fA-F]{6}$/) }).strict();
   var PropMaterialsSchema = external_exports.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
-  var propPosition = external_exports.tuple([external_exports.number().min(-128).max(128), external_exports.number().min(-128).max(128), external_exports.number().min(-128).max(128)]);
-  var propRotation = external_exports.tuple([external_exports.number().min(-180).max(180), external_exports.number().min(-180).max(180), external_exports.number().min(-180).max(180)]);
+  var propPosition = external_exports.array(external_exports.number().min(-128).max(128)).length(3).transform((v) => [v[0], v[1], v[2]]);
+  var propRotation = external_exports.array(external_exports.number().min(-180).max(180)).length(3).transform((v) => [v[0], v[1], v[2]]);
   var PropPartSchema = external_exports.object({
     name: safeName,
     group: safeName.default("root"),
@@ -22019,7 +22019,7 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
     author: "VoxelFlow Studio contributors",
     description: "Prompt-designed Minecraft props and animated robots: editable geometry, named materials, quality checks and Bedrock exports. Connect ChatGPT/Codex through MCP or use offline examples.",
     icon: "smart_toy",
-    version: "0.3.1",
+    version: "0.3.2",
     min_version: "5.2.0",
     variant: "desktop",
     tags: ["Minecraft: Bedrock Edition", "Animation", "Utility"],

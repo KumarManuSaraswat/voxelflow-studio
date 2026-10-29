@@ -1,6 +1,6 @@
 {
   "name": "voxelflow-studio",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -19,6 +19,8 @@
     "examples": "tsx scripts/examples.ts",
     "examples:props": "tsx scripts/prop-examples.ts",
     "demo": "tsx scripts/demo-client.ts",
+    "doctor": "node scripts/doctor.mjs",
+    "package:hackathon": "node scripts/package-hackathon.mjs",
     "verify:live-export": "tsx scripts/verify-live-export.ts",
     "package": "node scripts/package.mjs",
     "check": "npm run typecheck && npm test && npm run build && npm run examples && npm run examples:props"

@@ -1,0 +1,836 @@
+{
+  "checkedAt": "2026-10-29T18:14:45.395Z",
+  "host": "Codex CLI with automatic approval review",
+  "pluginVersion": "0.3.2",
+  "blockbenchVersion": "5.2.2",
+  "promptDesigned": true,
+  "nativeApproval": true,
+  "chatgptAccountVerified": false,
+  "operation": {
+    "ok": true,
+    "data": {
+      "id": "1a4230de-4e3e-4c9e-b016-66d485552f1c",
+      "tool": "create_prop",
+      "state": "applied",
+      "summary": "Create “brass_festival_lantern” in a new Bedrock tab.\nMinecraft-style brass festival lantern, exactly 18 pixels tall including a square carrying handle. Twenty editable cubes grouped into base, frame, glass, cap, and handle. Dark metal base and four corner posts, brass footing and post collars, four flat amber glass-representing panels, a stepped gold top cap, and a square brass handle. Amber is a flat color only, with no real light or emissive effect.\n\n20 editable cubes in 5 part groups. Materials: dark_metal #303238, brass #B98A3D, amber_glass #E99B2E, gold #E4BB55.\nParts include: base plate, brass footing, front left post, front right post, rear left post, rear right post, front left collar, front right collar, rear left collar, rear right collar, front amber panel, rear amber panel….\n\nA static prop with a real PNG and UVs. Existing tabs stay open. Game item/attachable registration is a separate integration step.",
+      "createdAt": "2026-10-29T18:13:37.208Z",
+      "result": {
+        "projectId": "54655eab-8a2f-b35b-c2d7-142d3aed2191",
+        "kind": "prop",
+        "cubes": 20,
+        "bones": 6,
+        "animations": [],
+        "message": "Created in a new tab. The original project is preserved."
+      }
+    }
+  },
+  "project": {
+    "ok": true,
+    "data": {
+      "project": {
+        "id": "54655eab-8a2f-b35b-c2d7-142d3aed2191",
+        "name": "brass_festival_lantern",
+        "format": "bedrock",
+        "kind": "prop"
+      },
+      "identifier": "festival_props:brass_festival_lantern",
+      "geometry": {
+        "cubes": 20,
+        "bones": [
+          {
+            "name": "root",
+            "pivot": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "base",
+            "parent": "root",
+            "pivot": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "frame",
+            "parent": "root",
+            "pivot": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "glass",
+            "parent": "root",
+            "pivot": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "cap",
+            "parent": "root",
+            "pivot": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "handle",
+            "parent": "root",
+            "pivot": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "parts": [
+          {
+            "name": "base_plate",
+            "group": "base",
+            "from": [
+              -5,
+              0,
+              -5
+            ],
+            "to": [
+              5,
+              1,
+              5
+            ],
+            "pivot": [
+              0,
+              0.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              0,
+              0,
+              8,
+              16
+            ]
+          },
+          {
+            "name": "brass_footing",
+            "group": "base",
+            "from": [
+              -4.5,
+              1,
+              -4.5
+            ],
+            "to": [
+              4.5,
+              2,
+              4.5
+            ],
+            "pivot": [
+              0,
+              1.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "front_left_post",
+            "group": "frame",
+            "from": [
+              -4.5,
+              2,
+              -4.5
+            ],
+            "to": [
+              -3.5,
+              11,
+              -3.5
+            ],
+            "pivot": [
+              -4,
+              6.5,
+              -4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              0,
+              0,
+              8,
+              16
+            ]
+          },
+          {
+            "name": "front_right_post",
+            "group": "frame",
+            "from": [
+              3.5,
+              2,
+              -4.5
+            ],
+            "to": [
+              4.5,
+              11,
+              -3.5
+            ],
+            "pivot": [
+              4,
+              6.5,
+              -4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              0,
+              0,
+              8,
+              16
+            ]
+          },
+          {
+            "name": "rear_left_post",
+            "group": "frame",
+            "from": [
+              -4.5,
+              2,
+              3.5
+            ],
+            "to": [
+              -3.5,
+              11,
+              4.5
+            ],
+            "pivot": [
+              -4,
+              6.5,
+              4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              0,
+              0,
+              8,
+              16
+            ]
+          },
+          {
+            "name": "rear_right_post",
+            "group": "frame",
+            "from": [
+              3.5,
+              2,
+              3.5
+            ],
+            "to": [
+              4.5,
+              11,
+              4.5
+            ],
+            "pivot": [
+              4,
+              6.5,
+              4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              0,
+              0,
+              8,
+              16
+            ]
+          },
+          {
+            "name": "front_left_collar",
+            "group": "frame",
+            "from": [
+              -4.75,
+              2,
+              -4.75
+            ],
+            "to": [
+              -3.25,
+              3,
+              -3.25
+            ],
+            "pivot": [
+              -4,
+              2.5,
+              -4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "front_right_collar",
+            "group": "frame",
+            "from": [
+              3.25,
+              2,
+              -4.75
+            ],
+            "to": [
+              4.75,
+              3,
+              -3.25
+            ],
+            "pivot": [
+              4,
+              2.5,
+              -4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "rear_left_collar",
+            "group": "frame",
+            "from": [
+              -4.75,
+              2,
+              3.25
+            ],
+            "to": [
+              -3.25,
+              3,
+              4.75
+            ],
+            "pivot": [
+              -4,
+              2.5,
+              4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "rear_right_collar",
+            "group": "frame",
+            "from": [
+              3.25,
+              2,
+              3.25
+            ],
+            "to": [
+              4.75,
+              3,
+              4.75
+            ],
+            "pivot": [
+              4,
+              2.5,
+              4
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "front_amber_panel",
+            "group": "glass",
+            "from": [
+              -3.5,
+              2,
+              -4
+            ],
+            "to": [
+              3.5,
+              11,
+              -3.5
+            ],
+            "pivot": [
+              0,
+              6.5,
+              -3.75
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              16,
+              0,
+              24,
+              16
+            ]
+          },
+          {
+            "name": "rear_amber_panel",
+            "group": "glass",
+            "from": [
+              -3.5,
+              2,
+              3.5
+            ],
+            "to": [
+              3.5,
+              11,
+              4
+            ],
+            "pivot": [
+              0,
+              6.5,
+              3.75
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              16,
+              0,
+              24,
+              16
+            ]
+          },
+          {
+            "name": "left_amber_panel",
+            "group": "glass",
+            "from": [
+              -4,
+              2,
+              -3.5
+            ],
+            "to": [
+              -3.5,
+              11,
+              3.5
+            ],
+            "pivot": [
+              -3.75,
+              6.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              16,
+              0,
+              24,
+              16
+            ]
+          },
+          {
+            "name": "right_amber_panel",
+            "group": "glass",
+            "from": [
+              3.5,
+              2,
+              -3.5
+            ],
+            "to": [
+              4,
+              11,
+              3.5
+            ],
+            "pivot": [
+              3.75,
+              6.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              16,
+              0,
+              24,
+              16
+            ]
+          },
+          {
+            "name": "gold_cap_rim",
+            "group": "cap",
+            "from": [
+              -5,
+              11,
+              -5
+            ],
+            "to": [
+              5,
+              12,
+              5
+            ],
+            "pivot": [
+              0,
+              11.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              24,
+              0,
+              32,
+              16
+            ]
+          },
+          {
+            "name": "gold_cap_crown",
+            "group": "cap",
+            "from": [
+              -4,
+              12,
+              -4
+            ],
+            "to": [
+              4,
+              13,
+              4
+            ],
+            "pivot": [
+              0,
+              12.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              24,
+              0,
+              32,
+              16
+            ]
+          },
+          {
+            "name": "handle_left",
+            "group": "handle",
+            "from": [
+              -2.5,
+              13,
+              -0.5
+            ],
+            "to": [
+              -1.5,
+              18,
+              0.5
+            ],
+            "pivot": [
+              -2,
+              15.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "handle_right",
+            "group": "handle",
+            "from": [
+              1.5,
+              13,
+              -0.5
+            ],
+            "to": [
+              2.5,
+              18,
+              0.5
+            ],
+            "pivot": [
+              2,
+              15.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "handle_bottom",
+            "group": "handle",
+            "from": [
+              -1.5,
+              13,
+              -0.5
+            ],
+            "to": [
+              1.5,
+              14,
+              0.5
+            ],
+            "pivot": [
+              0,
+              13.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          },
+          {
+            "name": "handle_top",
+            "group": "handle",
+            "from": [
+              -1.5,
+              17,
+              -0.5
+            ],
+            "to": [
+              1.5,
+              18,
+              0.5
+            ],
+            "pivot": [
+              0,
+              17.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "uv": [
+              8,
+              0,
+              16,
+              16
+            ]
+          }
+        ]
+      },
+      "materials": [
+        {
+          "name": "dark_metal",
+          "color": "#303238"
+        },
+        {
+          "name": "brass",
+          "color": "#B98A3D"
+        },
+        {
+          "name": "amber_glass",
+          "color": "#E99B2E"
+        },
+        {
+          "name": "gold",
+          "color": "#E4BB55"
+        }
+      ],
+      "mapping": {
+        "root": "root"
+      },
+      "rigDetection": null,
+      "textures": [
+        {
+          "id": "3d193cd5-d79c-9908-888b-6f4cc3722f1a",
+          "name": "brass_festival_lantern.png",
+          "width": 128,
+          "height": 16,
+          "pngBytes": 342
+        }
+      ],
+      "animations": [],
+      "unsupported": []
+    }
+  },
+  "validation": {
+    "ok": true,
+    "data": {
+      "ready": true,
+      "counts": {
+        "passed": 5,
+        "warning": 1,
+        "failed": 0
+      },
+      "findings": [
+        {
+          "stage": "geometry",
+          "status": "passed",
+          "code": "geometry.ok",
+          "message": "20 editable cubes have valid dimensions."
+        },
+        {
+          "stage": "rig",
+          "status": "passed",
+          "code": "rig.ok",
+          "message": "6 object groups form a valid hierarchy; no humanoid rig is required."
+        },
+        {
+          "stage": "texture",
+          "status": "passed",
+          "code": "texture.ok",
+          "message": "All faces reference the PNG atlas and valid UVs."
+        },
+        {
+          "stage": "animation",
+          "status": "passed",
+          "code": "animation.ok",
+          "message": "Static prop: character animations are not required."
+        },
+        {
+          "stage": "export",
+          "status": "passed",
+          "code": "export.ok",
+          "message": "Names and supported features are consistent with the Bedrock asset exporter."
+        },
+        {
+          "stage": "export",
+          "status": "warning",
+          "code": "export.engine_unverified",
+          "message": "Bedrock assets are structurally checked; Minecraft runtime has not been tested.",
+          "correction": "Integrate the resource assets with a behavior entity and test in Minecraft."
+        }
+      ],
+      "engineVerified": false
+    }
+  },
+  "export": {
+    "state": "applied",
+    "nativeSave": true,
+    "files": [
+      "models/entity/brass_festival_lantern.geo.json",
+      "textures/entity/brass_festival_lantern.png",
+      "entity/brass_festival_lantern.entity.json",
+      "render_controllers/brass_festival_lantern.render_controllers.json",
+      "manifest.json",
+      "validation-report.json",
+      "INTEGRATION.txt",
+      "source/brass_festival_lantern.bbmodel"
+    ],
+    "bytes": 7400,
+    "packageValidation": {
+      "passed": 1,
+      "warning": 0,
+      "failed": 0
+    },
+    "engineVerified": false
+  },
+  "editorPluginVersion": "0.3.1",
+  "note": "The repaired MCP plugin was version 0.3.2; the already-loaded native editor plugin was 0.3.1. Native approval, model creation, and export remained on the real editor path."
+}

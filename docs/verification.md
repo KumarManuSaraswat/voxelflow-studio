@@ -4,6 +4,18 @@ Tested on 2026-10-29 with Windows, Node 24.11.1, npm 11.6.2, and the installed B
 
 ## Automated results
 
+### Version 0.3.2: real prompt rehearsal
+
+The first Codex CLI rehearsal exposed a production compatibility bug: tuple-style coordinate schemas caused the host to skip `create_prop`. Version 0.3.2 uses homogeneous numeric arrays of exactly three values, preserving core bounds and tuple output. The MCP integration test now checks the advertised schema. All **84 tests in 7 files**, type checking, build, examples, and fresh-extraction desktop verification pass.
+
+A subsequent real **Codex CLI** run with automatic approval review designed a brass festival lantern from a natural-language brief, called `create_prop` once, and stopped at `pending_approval`. After the native Blockbench approval, the operation was **applied**: **20 editable cubes, 5 part groups plus root, 4 materials**, and a 128×16 PNG atlas. Live inspection/validation returned **5 passed, 1 engine-unverified warning, 0 failed**. Evidence: [live operation and validation](evidence/hackathon-live.json), [actual editor screenshot](evidence/festival-lantern.png). The AI call created the proposal; native approval and subsequent verification were performed separately during rehearsal.
+
+The headless `never` approval policy initially blocked the write tool; the successful run used the supported automatic approval reviewer, retaining native Blockbench approval. An idle connection also needed reconnecting. The presenter guide covers both. This is a verified Codex CLI path, not a completed ChatGPT account onboarding or a public-directory listing. A fresh interactive chat should still be rehearsed before presenting.
+
+The bundled doctor reports four checks (Node, package, MCP discovery, live Blockbench). Its extracted kit passed all four against Blockbench 5.2.2. It deliberately does not claim to test AI-host permissions or natural-language behavior.
+
+The lantern also completed native export approval and Save: an eight-file ZIP, 20-cube editable source, and a passing package-reference check. The saved source is included as an offline rehearsal backup in the hackathon kit.
+
 ### Version 0.3: desktop packaging
 
 [Live desktop evidence](evidence/desktop-live.json) confirms the installed MCP bundle connected to actual Blockbench 5.2.2, automatically detected the companion, and validated the reopened staff. The first live pairing check caught an unavailable internal `fs` global; pairing now uses Blockbench's public read API, with two regression tests.
@@ -64,6 +76,6 @@ Evidence files: [idle motion](evidence/idle-motion.json), [walk motion](evidence
 
 ## Not verified
 
-Minecraft execution, behavior-pack integration, actual attack triggers, emissive rendering, macOS/Linux, arbitrary imported rigs, and account-level ChatGPT/Codex natural-language sessions remain unverified. Inspector instructions are supplied; the recorded MCP execution used the equivalent official SDK client rather than the Inspector browser UI. The current Codex CLI `mcp add` syntax was also checked against the installed CLI's help.
+Minecraft execution, behavior-pack integration, actual attack triggers, emissive rendering, macOS/Linux, arbitrary imported rigs, and account-level ChatGPT onboarding remain unverified. Codex CLI natural-language creation is recorded above; other live checks used the official SDK client rather than the Inspector browser UI. The current Codex CLI `mcp add` syntax was also checked against the installed CLI's help.
 
 No mock editor, fake tool success, or prerecorded animation stands in for the production execution path. Workflow unit tests use mocks only to isolate state-machine failure cases. The [manual checklist](manual-smoke-test.md) distinguishes further reproducible checks from the results recorded here.

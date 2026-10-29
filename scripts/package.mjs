@@ -18,6 +18,7 @@ for (const path of ['README.md', 'CONTRIBUTING.md', 'GOVERNANCE.md', 'CODE_OF_CO
   files[path] = new Uint8Array(await readFile(path));
 }
 await mkdir('dist', { recursive: true });
+files['dist/brass_festival_lantern_bedrock_assets.zip']=new Uint8Array(await readFile('dist/brass_festival_lantern_bedrock_assets.zip'));
 const version=JSON.parse(await readFile('package.json','utf8')).version;
 const archive = `dist/voxelflow-studio-${version}.zip`;
 const zipped = zipSync(files, { level: 6 });
@@ -29,6 +30,7 @@ for (const [path, bytes] of Object.entries(files)) {
 await writeFile(archive, zipped);
 const artifacts = [archive, 'dist/voxelflow_studio.js', 'dist/atlas_robot_bedrock_assets.zip', 'dist/atlas_robot_live_bedrock_assets.zip','dist/adventurer_bag_bedrock_assets.zip','dist/arcane_staff_bedrock_assets.zip','dist/adventurer_bag_live_bedrock_assets.zip'];
 const hashes = [];
+artifacts.push('dist/brass_festival_lantern_bedrock_assets.zip');
 for (const path of artifacts) hashes.push(`${createHash('sha256').update(await readFile(path)).digest('hex')}  ${path.split('/').at(-1)}`);
 await writeFile('dist/SHA256SUMS.txt', hashes.join('\n') + '\n');
 console.log(`Release verified: ${Object.keys(files).length} files, ${zipped.length} bytes. ${archive}`);

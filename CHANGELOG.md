@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2 — AI-host compatibility and demo kit
+
+- Fix `create_prop` discovery in Codex: coordinate schemas now advertise homogeneous numeric arrays with exactly three values, preserving validation bounds and tuple values internally.
+- Add a regression check against the actual advertised MCP schema.
+- Add a read-only setup doctor and an offline hackathon kit with saved models, exports, prompts, troubleshooting, and adaptable demo scripts.
+
+See [release notes](docs/releases/0.3.2.md) and the [presenter guide](docs/hackathon-demo.md).
+
 ## 0.3.1 — Public desktop beta
 
 - Correct dependency-lock entries accidentally changed during the 0.3.0 version update, restoring clean npm installs.

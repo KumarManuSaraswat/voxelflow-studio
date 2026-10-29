@@ -40371,8 +40371,8 @@ var AssetSpecSchema = external_exports.object({
 }).strict();
 var PropMaterialSchema = external_exports.object({ name: safeName, color: external_exports.string().regex(/^#[0-9a-fA-F]{6}$/) }).strict();
 var PropMaterialsSchema = external_exports.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
-var propPosition = external_exports.tuple([external_exports.number().min(-128).max(128), external_exports.number().min(-128).max(128), external_exports.number().min(-128).max(128)]);
-var propRotation = external_exports.tuple([external_exports.number().min(-180).max(180), external_exports.number().min(-180).max(180), external_exports.number().min(-180).max(180)]);
+var propPosition = external_exports.array(external_exports.number().min(-128).max(128)).length(3).transform((v) => [v[0], v[1], v[2]]);
+var propRotation = external_exports.array(external_exports.number().min(-180).max(180)).length(3).transform((v) => [v[0], v[1], v[2]]);
 var PropPartSchema = external_exports.object({
   name: safeName,
   group: safeName.default("root"),
@@ -40518,7 +40518,7 @@ var descriptions = {
   cancel_operation: "Cancel a pending approval without changing the scene. Running exports must be cancelled in the native Save dialog.",
   preview_animation: "Select and play or stop an existing idle, walk, or attack clip in the real Blockbench animation timeline. Does not create or edit keyframes."
 };
-var server = new McpServer({ name: "voxelflow-studio", version: "0.3.1" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. You may design new object types: the generic cube blueprint is not limited to presets. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
+var server = new McpServer({ name: "voxelflow-studio", version: "0.3.2" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. You may design new object types: the generic cube blueprint is not limited to presets. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
 for (const name of toolNames) {
   const mutation = mutationNames.includes(name);
   server.registerTool(name, {

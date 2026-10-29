@@ -1,4 +1,6 @@
-# 90-second hackathon demo
+# Earlier 90-second demo
+
+For the current desktop beta, use the [hackathon presenter guide](hackathon-demo.md), with one-, three-, and five-minute versions, copyable prompts, preflight checks, and offline recovery. The developer workflow below is retained as an earlier robot demonstration.
 
 ## Prompt-to-prop demo (0.2)
 

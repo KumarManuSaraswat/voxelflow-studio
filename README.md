@@ -24,7 +24,7 @@ The prompt belongs in your AI chat; Blockbench is the model workspace. Bag, Staf
 
 ## What works today
 
-| Capability | Desktop beta 0.3.1 |
+| Capability | Desktop beta 0.3.2 |
 | --- | --- |
 | General props | Up to 128 cubes, 16 named materials, and 32 groups, with rotations and pivots |
 | Texturing | PNG atlas, per-face UVs, native painting, and named recoloring that preserves painted pixels |
@@ -39,7 +39,7 @@ This is an early desktop beta. Structural changes through MCP currently create a
 
 Requires **Node.js 22+**, **Blockbench desktop 5.2+**, and a desktop ChatGPT/Codex host supporting local plugins. Windows is tested; macOS/Linux are not yet verified.
 
-**[Download the desktop beta ZIP](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/download/v0.3.1/voxelflow-desktop-beta-0.3.1.zip)** · [Release notes](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/tag/v0.3.1) · [Full installation guide](plugins/voxelflow-studio/INSTALL.md)
+**[Download the desktop beta ZIP](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/download/v0.3.2/voxelflow-desktop-beta-0.3.2.zip)** · [Release notes](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/tag/v0.3.2) · [Full installation guide](plugins/voxelflow-studio/INSTALL.md)
 
 1. Extract the ZIP. Load its `plugins/voxelflow-studio/blockbench/voxelflow_studio.js` in Blockbench using **File → Plugins → Load Plugin from File**.
 2. Double-click `plugins/voxelflow-studio/Start VoxelFlow.cmd` and keep the companion running.
@@ -63,7 +63,7 @@ Open the editable [adventurer bag](examples/props/bag/adventurer_bag.bbmodel), [
 
 ![An editable arcane staff created in Blockbench with VoxelFlow](docs/evidence/arcane-staff.png)
 
-The beta was checked on **Windows, Blockbench 5.2.2, and Node 24.11.1**, with **84 automated tests**. A fresh extracted desktop package works outside the repository without `node_modules`; real MCP calls also exercised the installed editor. Minecraft runtime behavior and an autonomous ChatGPT natural-language session remain unverified. [Read the evidence](docs/verification.md).
+The beta was checked on **Windows, Blockbench 5.2.2, and Node 24.11.1**, with **84 automated tests**. A real Codex CLI prompt designed a [20-cube lantern](examples/props/lantern/brass_festival_lantern.bbmodel), created after native approval and exported successfully. A fresh desktop extraction works without `node_modules`. Minecraft runtime behavior and ChatGPT account onboarding remain unverified. [Read the evidence](docs/verification.md).
 
 ## Develop
 
@@ -82,9 +82,13 @@ Load `dist/voxelflow_studio.js` in Blockbench. Run `npm run bridge`, then connec
 | `npm run demo -- --prop bag` | Exercise the real MCP/editor path; requires native approvals |
 | `npm run package:desktop` | Build both standalone desktop ZIPs |
 | `npm run verify:desktop` | Check a fresh extraction and bundled MCP startup |
+| `npm run doctor` | Read-only local package, MCP discovery, and editor preflight |
+| `npm run package:hackathon` | Package an offline presenter kit after building the desktop ZIP |
 | `npm run package` | Package the source, builds, examples, and community docs |
 
 [Architecture](docs/architecture.md) · [MCP setup](docs/mcp-integration.md) · [Prompt workflow](docs/prompt-to-model.md) · [Manual checks](docs/manual-smoke-test.md) · [Support](SUPPORT.md)
+
+Presenting the project? Use the [hackathon guide](docs/hackathon-demo.md) for adaptable scripts, copyable prompts, and offline recovery.
 
 ## Build with us
 
