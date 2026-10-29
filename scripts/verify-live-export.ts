@@ -1,0 +1,13 @@
+import { readFile,writeFile,mkdir } from 'node:fs/promises';
+import { unzipSync } from 'fflate';
+import { validatePackage } from '../packages/core/src/exporters';
+const files=unzipSync(await readFile('dist/atlas_robot_live_bedrock_assets.zip'));
+const result=validatePackage(files);if(!result.ready)throw new Error(JSON.stringify(result));
+const source=files['source/atlas_robot.bbmodel'];if(!source)throw new Error('Missing editable source.');
+const model=JSON.parse(new TextDecoder().decode(source));
+if(model.elements.length!==43||model.groups.length!==11||model.animations.length!==3)throw new Error('Native source is incomplete.');
+const frames=model.animations.reduce((n:number,a:any)=>n+Object.values(a.animators).reduce((m:number,t:any)=>m+(t.keyframes?.length??0),0),0);
+if(frames!==85)throw new Error(`Expected 85 native keyframes; found ${frames}.`);
+await mkdir('examples/robot',{recursive:true});await writeFile('examples/robot/atlas_robot.bbmodel',source);
+await mkdir('docs/evidence',{recursive:true});await writeFile('docs/evidence/live-export.json',JSON.stringify({blockbench:'5.2.2',files:Object.keys(files),nativeSource:{cubes:model.elements.length,bones:model.groups.length,animations:model.animations.length,keyframes:frames},packageValidation:result},null,2));
+console.log(`Live ZIP verified: ${Object.keys(files).length} files; native source has 43 cubes, 11 bones, 3 clips, ${frames} keyframes.`);

@@ -1,0 +1,6 @@
+node_modules/
+.research/
+.local/
+coverage/
+*.log
+.env
