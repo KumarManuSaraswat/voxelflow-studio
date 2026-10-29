@@ -12,6 +12,8 @@ Update versioned download URLs and the setup compatibility notes when publishing
 
 Public website: <https://voxelflow-studio.vercel.app>.
 
+Vercel project: `voxelflow-studio`, connected to `KumarManuSaraswat/voxelflow-studio` on GitHub.
+
 The repository-root `vercel.json` publishes `website/dist` as a static site. Leave the Vercel Root Directory at the repository root, select the **Other** framework preset, and use the checked-in overrides for empty install/build commands. The website does not need the companion server or any environment variables.
 
 Production deployments follow the GitHub `main` branch. To deploy manually from the repository root with an authorized Vercel account, run `vercel --prod`. `.vercelignore` limits CLI uploads to the public website and deployment configuration. The local `.vercel` project link stays out of Git.
