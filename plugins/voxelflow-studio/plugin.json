@@ -1,0 +1,30 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "voxelflow-studio",
+  "version": "0.3.0",
+  "description": "Create editable Minecraft-style props and animated robots in your local Blockbench editor from a chat prompt.",
+  "license": "MIT",
+  "author": {"name": "KumarManuSaraswat", "url": "https://github.com/KumarManuSaraswat"},
+  "repository": "https://github.com/KumarManuSaraswat/voxelflow-studio",
+  "homepage": "https://github.com/KumarManuSaraswat/voxelflow-studio",
+  "keywords": ["minecraft", "blockbench", "3d", "modeling"],
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "onboardingSkill": "./skills/setup/SKILL.md",
+      "interface": {
+        "displayName": "VoxelFlow Studio",
+        "shortDescription": "Minecraft models from prompts",
+        "longDescription": "Design bags, staffs, swords, lanterns, and other cube-based props in ChatGPT or Codex, then review and edit the actual model in Blockbench. Includes named material edits, quality checks, Undo, Bedrock resource export, and an animated robot preset. Requires a local desktop chat, Node.js 22+, Blockbench desktop 5.2+, and the running VoxelFlow companion. Windows is tested. Minecraft item registration and gameplay are separate integration work. This desktop beta is not a hosted web service.",
+        "category": "Developer Tools",
+        "developerName": "KumarManuSaraswat",
+        "websiteURL": "https://github.com/KumarManuSaraswat/voxelflow-studio",
+        "supportURL": "https://github.com/KumarManuSaraswat/voxelflow-studio/issues",
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": ["Create a leather backpack with gold buckles and a front pocket.", "Create a wooden wizard staff with a purple crystal."],
+        "brandColor": "#147D72",
+        "screenshots": ["./assets/adventurer-bag.png", "./assets/arcane-staff.png"]
+      }
+    }
+  }
+}

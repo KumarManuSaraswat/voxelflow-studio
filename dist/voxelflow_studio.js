@@ -21665,6 +21665,29 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
     }
   };
 
+  // packages/core/src/pairing.ts
+  function parsePairing(text) {
+    if (text.length > 8192) throw new Error("The companion connection file is too large.");
+    const value = JSON.parse(text);
+    if (!value || !Number.isInteger(value.port) || value.port < 1024 || value.port > 65535 || typeof value.token !== "string" || !/^[a-f0-9]{64}$/.test(value.token)) throw new Error("Invalid companion connection. Restart the VoxelFlow companion.");
+    return { port: value.port, token: value.token };
+  }
+
+  // packages/blockbench-plugin/src/bridge/pairing.ts
+  function localPairing() {
+    try {
+      const file2 = PathModule.join(SystemInfo.home_directory, ".voxelflow-studio", "bridge.json");
+      let pairing;
+      Blockbench.read([file2], { readtype: "text", errorbox: false }, (files) => {
+        const content = files[0]?.content;
+        if (typeof content === "string") pairing = parsePairing(content);
+      });
+      return pairing;
+    } catch {
+      return;
+    }
+  }
+
   // packages/blockbench-plugin/src/ui/studio.ts
   var node2 = (tag, text, className) => {
     const n = document.createElement(tag);
@@ -21800,7 +21823,7 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
       const brand = node2("div", void 0, "vf-brand");
       const title = node2("div");
       title.append(node2("div", "ARTIST WORKSPACE", "vf-kicker"), node2("strong", "VoxelFlow Studio"));
-      brand.append(title, node2("span", "BEDROCK \xB7 0.2", "vf-badge"));
+      brand.append(title, node2("span", "BEDROCK \xB7 0.3", "vf-badge"));
       root.append(brand);
       const status = node2("div", void 0, "vf-status");
       status.append(node2("span", void 0, `vf-dot ${this.connection.connected ? "online" : ""}`), node2("span", this.connection.status), button(this.connection.connected ? "Disconnect" : "Connect", () => this.connection.connected ? this.connection.disconnect() : this.connectDialog(), "vf-connect"));
@@ -21949,7 +21972,9 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
       d.show();
     }
     connectDialog() {
-      const d = new Dialog({ id: "voxelflow_connect", title: "Connect your AI assistant", width: 520, lines: [node2("p", "Start \u201Cnpm run bridge\u201D in the project folder, then paste its local session token. The token is kept only in memory. The core presets work offline.", "vf-muted")], form: { port: { label: "Local port", type: "number", value: 32123, min: 1024, max: 65535 }, token: { label: "Session token", type: "password", value: "" } }, buttons: ["Connect", "Cancel"], onConfirm: (result) => {
+      const pairing = localPairing();
+      const message = pairing ? "Your local VoxelFlow companion was found. Click Connect to pair this editor." : "Start the companion launcher from the downloaded plugin, then reopen this dialog. Developers can use npm run bridge and paste its token manually.";
+      const d = new Dialog({ id: "voxelflow_connect", title: "Connect your AI assistant", width: 520, lines: [node2("p", message, "vf-muted")], form: { port: { label: "Local port", type: "number", value: pairing?.port ?? 32123, min: 1024, max: 65535 }, token: { label: "Session token", type: "password", value: pairing?.token ?? "" } }, buttons: ["Connect", "Cancel"], onConfirm: (result) => {
         try {
           this.connection.connect(Number(result.port), String(result.token).trim());
         } catch (e) {
@@ -21994,7 +22019,7 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
     author: "VoxelFlow Studio contributors",
     description: "Prompt-designed Minecraft props and animated robots: editable geometry, named materials, quality checks and Bedrock exports. Connect ChatGPT/Codex through MCP or use offline examples.",
     icon: "smart_toy",
-    version: "0.2.0",
+    version: "0.3.0",
     min_version: "5.2.0",
     variant: "desktop",
     tags: ["Minecraft: Bedrock Edition", "Animation", "Utility"],

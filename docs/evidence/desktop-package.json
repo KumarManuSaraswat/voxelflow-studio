@@ -1,0 +1,11 @@
+{
+  "version": "0.3.0",
+  "archiveFiles": 15,
+  "nodeModulesRequired": false,
+  "mcpTools": 14,
+  "mcpPrompts": 2,
+  "disconnectedReportedHonestly": true,
+  "invalidInputRejected": true,
+  "tokenPrinted": false,
+  "manifestPathsExist": true
+}

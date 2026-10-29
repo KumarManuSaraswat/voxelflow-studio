@@ -1,0 +1,86 @@
+{
+  "version": "0.3.0",
+  "installedMcpServer": true,
+  "automaticPairingObserved": true,
+  "status": {
+    "connected": true,
+    "blockbenchVersion": "5.2.2",
+    "project": {
+      "id": "4597f956-8479-b9fe-85c9-184faf210519",
+      "name": "arcane_staff",
+      "format": "bedrock",
+      "kind": "prop"
+    },
+    "supported": {
+      "templates": [
+        "robot",
+        "bag",
+        "staff"
+      ],
+      "customProps": {
+        "tool": "create_prop",
+        "maxParts": 128,
+        "maxMaterials": 16,
+        "promptLocation": "ChatGPT or Codex"
+      },
+      "targets": [
+        "bedrock"
+      ],
+      "animations": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "approvalRequired": true
+    },
+    "undoAvailable": true
+  },
+  "validation": {
+    "ready": true,
+    "counts": {
+      "passed": 5,
+      "warning": 1,
+      "failed": 0
+    },
+    "findings": [
+      {
+        "stage": "geometry",
+        "status": "passed",
+        "code": "geometry.ok",
+        "message": "16 editable cubes have valid dimensions."
+      },
+      {
+        "stage": "rig",
+        "status": "passed",
+        "code": "rig.ok",
+        "message": "6 object groups form a valid hierarchy; no humanoid rig is required."
+      },
+      {
+        "stage": "texture",
+        "status": "passed",
+        "code": "texture.ok",
+        "message": "All faces reference the PNG atlas and valid UVs."
+      },
+      {
+        "stage": "animation",
+        "status": "passed",
+        "code": "animation.ok",
+        "message": "Static prop: character animations are not required."
+      },
+      {
+        "stage": "export",
+        "status": "passed",
+        "code": "export.ok",
+        "message": "Names and supported features are consistent with the Bedrock asset exporter."
+      },
+      {
+        "stage": "export",
+        "status": "warning",
+        "code": "export.engine_unverified",
+        "message": "Bedrock assets are structurally checked; Minecraft runtime has not been tested.",
+        "correction": "Integrate the resource assets with a behavior entity and test in Minecraft."
+      }
+    ],
+    "engineVerified": false
+  }
+}

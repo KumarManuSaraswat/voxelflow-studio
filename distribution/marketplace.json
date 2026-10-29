@@ -1,0 +1,10 @@
+{
+  "name": "voxelflow-desktop-beta",
+  "interface": {"displayName": "VoxelFlow desktop beta"},
+  "plugins": [{
+    "name": "voxelflow-studio",
+    "source": {"source": "local", "path": "./plugins/voxelflow-studio"},
+    "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+    "category": "Developer Tools"
+  }]
+}

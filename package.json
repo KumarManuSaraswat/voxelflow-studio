@@ -1,6 +1,6 @@
 {
   "name": "voxelflow-studio",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -8,6 +8,9 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:desktop": "npm run build && node scripts/build-desktop.mjs",
+    "package:desktop": "npm run build:desktop && node scripts/package-desktop.mjs",
+    "verify:desktop": "node scripts/verify-desktop.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

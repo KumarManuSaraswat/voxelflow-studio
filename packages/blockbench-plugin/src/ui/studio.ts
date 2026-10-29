@@ -5,6 +5,7 @@ import { captureAsset, getPropMaterials, isPropProject } from '../editor/adapter
 import {propPreset} from '../../../core/src/props';
 import { Workflow } from '../editor/workflow';
 import { Connection } from '../bridge/connection';
+import {localPairing} from '../bridge/pairing';
 
 const node=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string,className?:string)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(className)n.className=className;return n;};
 const button=(text:string,fn:()=>void,className='')=>{const b=node('button',text,className);b.type='button';b.onclick=fn;return b;};
@@ -57,7 +58,7 @@ export class Studio {
   refresh(){if(this.refreshing)return;this.refreshing=true;for(const root of this.roots)this.render(root);this.refreshing=false;}
   render(root:HTMLElement){
     const prop=isPropProject();
-    root.replaceChildren();const brand=node('div',undefined,'vf-brand');const title=node('div');title.append(node('div','ARTIST WORKSPACE','vf-kicker'),node('strong','VoxelFlow Studio'));brand.append(title,node('span','BEDROCK · 0.2','vf-badge'));root.append(brand);
+    root.replaceChildren();const brand=node('div',undefined,'vf-brand');const title=node('div');title.append(node('div','ARTIST WORKSPACE','vf-kicker'),node('strong','VoxelFlow Studio'));brand.append(title,node('span','BEDROCK · 0.3','vf-badge'));root.append(brand);
     const status=node('div',undefined,'vf-status');status.append(node('span',undefined,`vf-dot ${this.connection.connected?'online':''}`),node('span',this.connection.status),button(this.connection.connected?'Disconnect':'Connect',()=>this.connection.connected?this.connection.disconnect():this.connectDialog(),'vf-connect'));root.append(status);
     const steps=node('div',undefined,'vf-steps');['Create','Texture',prop?'Parts':'Rig','Animate','Export'].forEach((text,i)=>steps.append(button(`${i+1} ${text}`,()=>{this.stage=i;this.message='';this.refresh();},i===this.stage?'active':'')));root.append(steps);
     const content=node('div',undefined,'vf-card');root.append(content);
@@ -129,7 +130,9 @@ export class Studio {
     const d=this.approval=new Dialog({id:'voxelflow_approval',title:'Review proposed change',width:560,lines:[text],buttons:['Apply change','Cancel'],cancel_on_click_outside:false,onConfirm:()=>{d.hide();void this.workflow.approve(op.id);},onCancel:()=>{this.workflow.reject(op.id);}});d.show();
   }
   connectDialog(){
-    const d=new Dialog({id:'voxelflow_connect',title:'Connect your AI assistant',width:520,lines:[node('p','Start “npm run bridge” in the project folder, then paste its local session token. The token is kept only in memory. The core presets work offline.','vf-muted')],form:{port:{label:'Local port',type:'number',value:32123,min:1024,max:65535},token:{label:'Session token',type:'password',value:''}},buttons:['Connect','Cancel'],onConfirm:(result)=>{try{this.connection.connect(Number(result.port),String(result.token).trim());}catch(e){this.message=String(e);}d.hide();this.refresh();}});d.show();
+    const pairing=localPairing();
+    const message=pairing?'Your local VoxelFlow companion was found. Click Connect to pair this editor.':'Start the companion launcher from the downloaded plugin, then reopen this dialog. Developers can use npm run bridge and paste its token manually.';
+    const d=new Dialog({id:'voxelflow_connect',title:'Connect your AI assistant',width:520,lines:[node('p',message,'vf-muted')],form:{port:{label:'Local port',type:'number',value:pairing?.port??32123,min:1024,max:65535},token:{label:'Session token',type:'password',value:pairing?.token??''}},buttons:['Connect','Cancel'],onConfirm:(result)=>{try{this.connection.connect(Number(result.port),String(result.token).trim());}catch(e){this.message=String(e);}d.hide();this.refresh();}});d.show();
   }
   mappingDialog(){this.guard(()=>{
     const a=captureAsset(),mapping=detectRig(a.bones).mapping;const options=Object.fromEntries(a.bones.map(b=>[b.name,b.name]));

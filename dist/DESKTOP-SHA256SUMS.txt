@@ -1,0 +1,2 @@
+c254966a81fa88e697d1242abc61f5040acb87498acd6b620ec099969b50b1bf  voxelflow-plugin-0.3.0.zip
+0b6acce8d1e3937672c98dcf05135d779e047d073eaa04afc1a8d6b60d420c34  voxelflow-desktop-beta-0.3.0.zip

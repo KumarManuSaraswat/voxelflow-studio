@@ -4,6 +4,12 @@ Tested on 2026-10-29 with Windows, Node 24.11.1, npm 11.6.2, and the installed B
 
 ## Automated results
 
+### Version 0.3: desktop packaging
+
+[Live desktop evidence](evidence/desktop-live.json) confirms the installed MCP bundle connected to actual Blockbench 5.2.2, automatically detected the companion, and validated the reopened staff. The first live pairing check caught an unavailable internal `fs` global; pairing now uses Blockbench's public read API, with two regression tests.
+
+**84 tests in 7 files** pass. New pairing checks reject malformed tokens/ports, bound file size, and discard injected addresses/commands. Type checking and both builds pass. [Desktop package evidence](evidence/desktop-package.json) records a fresh extraction outside the repository, no installed `node_modules`, 14 tools, 2 prompts, correct disconnected/error responses, and no credential in desktop logs. The host's actual plugin manager discovered and installed `voxelflow-studio@voxelflow-desktop-beta` 0.3.0. This is local installation, not public directory approval or a completed autonomous ChatGPT design run.
+
 ### Version 0.2: general props
 
 The expanded suite passes **75 tests in 6 files**, including arbitrary object blueprints, invalid materials/dimensions/bounds, paint-preserving named colors, static prop validation, approval deduplication, and animation-free package references. Type checking, plugin/server builds, and robot/bag/staff example generation pass.

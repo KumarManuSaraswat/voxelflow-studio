@@ -12,7 +12,8 @@ async function include(path) {
     else if (entry.isFile()) files[child] = new Uint8Array(await readFile(child));
   }
 }
-for (const path of ['packages', 'scripts', 'tests', 'docs', 'examples']) await include(path);
+for (const path of ['packages', 'scripts', 'tests', 'docs', 'examples', 'plugins', 'distribution']) await include(path);
+for (const path of ['.agents/plugins/marketplace.json','.github/workflows/check.yml']) files[path]=new Uint8Array(await readFile(path));
 for (const path of ['README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.txt', '.gitignore', '.gitattributes', 'package.json', 'package-lock.json', 'tsconfig.json', 'vitest.config.ts', 'dist/voxelflow_studio.js', 'dist/atlas_robot_bedrock_assets.zip', 'dist/atlas_robot_live_bedrock_assets.zip', 'dist/adventurer_bag_bedrock_assets.zip','dist/arcane_staff_bedrock_assets.zip','dist/adventurer_bag_live_bedrock_assets.zip']) {
   files[path] = new Uint8Array(await readFile(path));
 }

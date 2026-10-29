@@ -1,14 +1,25 @@
 # VoxelFlow Studio
 
+**Version 0.3 desktop beta is installable.** [Download the desktop package](dist/voxelflow-desktop-beta-0.3.0.zip?raw=true) and follow [the install guide](plugins/voxelflow-studio/INSTALL.md). It includes a plugin manifest, two skills, bundled MCP dependencies, the Blockbench plugin, and a Windows companion launcher. Requires Node.js 22+ and Blockbench desktop 5.2+; no npm install/build step is needed for this download.
+
+**GitHub availability is not public ChatGPT-directory publication.** This package installs through a local desktop marketplace and needs a local chat. OpenAI's [desktop-only submission route](https://developers.openai.com/plugins/deploy/desktop-only) currently requires approved-partner access. See [distribution status](docs/distribution.md).
+
+With Codex CLI, install directly from this repository:
+
+```text
+codex plugin marketplace add KumarManuSaraswat/voxelflow-studio
+codex plugin add voxelflow-studio@voxelflow-desktop-beta
+```
+
 Describe a Minecraft-style object in ChatGPT or Codex; VoxelFlow turns the assistant's structured design into an editable Blockbench model. Version 0.2 adds a general cube-based prop builder for bags, staffs, lanterns, swords, and other objects, alongside the animated robot pipeline. Review changes in Blockbench, adjust the parts or texture, and export checked Bedrock resource assets.
 
 ![Backpack generated in Blockbench](docs/evidence/adventurer-bag.png)
 
 **Prompt location: ChatGPT. Model workspace: Blockbench.** The assistant composes up to 128 cubes and 16 named materials; objects are not restricted to preset categories. Offline Bag, Staff, and Robot examples also work without an AI account. Every scene change and export presents a review dialog in Blockbench. See [prompt-to-model workflow](docs/prompt-to-model.md).
 
-**Verification:** Windows Blockbench **5.2.2**, Node **24.11.1**; 75 automated tests pass. Actual MCP calls exercise the installed editor. See [verification evidence](docs/verification.md). Minecraft runtime and a ChatGPT/Codex account connection have not been verified; the MCP stdio path was exercised with the official SDK client.
+**Verification:** Windows Blockbench **5.2.2**, Node **24.11.1**; 84 automated tests pass. The extracted 0.3 package runs outside the repository without `node_modules`, exposes 14 MCP tools and 2 prompts, and installs through the local Codex plugin manager. Actual MCP calls exercise the installed editor. See [verification evidence](docs/verification.md). Minecraft runtime and an autonomous ChatGPT natural-language session remain unverified.
 
-## Quick start
+## Developer quick start
 
 Requirements: Blockbench **desktop 5.2+**, Node **22+**, npm. Use the repository root as your terminal working directory. On Windows, `npm.cmd` also works when PowerShell disallows `npm.ps1`.
 
@@ -88,7 +99,9 @@ Left/right means the character's own left/right; front faces negative Z in the e
 | --- | --- |
 | Installable standalone plugin | [`dist/voxelflow_studio.js`](dist/voxelflow_studio.js) |
 | Built MCP server | [`packages/mcp-server/dist/server.js`](packages/mcp-server/dist/server.js) |
-| Complete release archive | [`dist/voxelflow-studio-0.2.0.zip`](dist/voxelflow-studio-0.2.0.zip) |
+| Complete source/build archive | [`dist/voxelflow-studio-0.3.0.zip`](dist/voxelflow-studio-0.3.0.zip) |
+| Installable desktop beta (recommended) | [`dist/voxelflow-desktop-beta-0.3.0.zip`](dist/voxelflow-desktop-beta-0.3.0.zip) |
+| Portable plugin ZIP | [`dist/voxelflow-plugin-0.3.0.zip`](dist/voxelflow-plugin-0.3.0.zip) |
 | Editable bag and staff samples | [`examples/props/`](examples/props/) |
 | Bag resource assets | [`dist/adventurer_bag_bedrock_assets.zip`](dist/adventurer_bag_bedrock_assets.zip) |
 | Bag exported from the actual editor, with native source | [`dist/adventurer_bag_live_bedrock_assets.zip`](dist/adventurer_bag_live_bedrock_assets.zip) |
@@ -126,5 +139,7 @@ The ZIP is a **resource asset package**. A registered inventory item, wearable b
 For developer details, see [architecture and safety](docs/architecture.md), [manual smoke checklist](docs/manual-smoke-test.md), [roadmap](docs/roadmap.md), and the [90-second demo](docs/demo.md).
 
 ## Dependencies and license
+
+The desktop package bundles its JavaScript runtime dependencies with complete [license notices](plugins/voxelflow-studio/THIRD_PARTY_NOTICES.txt). `npm run package:desktop` rebuilds both desktop ZIPs; `npm run verify:desktop` tests a fresh extraction. Checksums are in `dist/DESKTOP-SHA256SUMS.txt`.
 
 Original project code is MIT licensed. Bundled dependency notices are in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt). Build tooling uses the official `blockbench-types`; the plugin uses Blockbench's installed editor APIs. `npm audit --omit=dev` reported zero advisories on 2026-10-29. The full development tree has two low-severity advisories through Vue 2 in the official type package; it is not bundled into the plugin or companion runtime.

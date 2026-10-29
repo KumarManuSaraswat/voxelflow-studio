@@ -123,15 +123,27 @@ async function editorRequest(config, tool, args, timeoutMs = 18e3) {
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
+import { homedir } from "node:os";
+
+// packages/core/src/pairing.ts
+function parsePairing(text) {
+  if (text.length > 8192) throw new Error("The companion connection file is too large.");
+  const value = JSON.parse(text);
+  if (!value || !Number.isInteger(value.port) || value.port < 1024 || value.port > 65535 || typeof value.token !== "string" || !/^[a-f0-9]{64}$/.test(value.token)) throw new Error("Invalid companion connection. Restart the VoxelFlow companion.");
+  return { port: value.port, token: value.token };
+}
+
+// packages/mcp-server/src/config.ts
 var projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-var sessionFile = resolve(projectRoot, ".local/bridge.json");
+var desktopMode = process.argv.includes("--desktop");
+var sessionFile = resolve(process.env.VOXELFLOW_STATE_DIR ?? (desktopMode ? resolve(homedir(), ".voxelflow-studio") : resolve(projectRoot, ".local")), "bridge.json");
 async function readConfig() {
   let disk = {};
   if (!process.env.VOXELFLOW_TOKEN) {
     try {
-      disk = JSON.parse(await readFile(sessionFile, "utf8"));
+      disk = parsePairing(await readFile(sessionFile, "utf8"));
     } catch {
-      throw new Error("Start npm run bridge first, then connect VoxelFlow in Blockbench.");
+      throw new Error(desktopMode ? "Start the VoxelFlow companion launcher, then click Connect in Blockbench." : "Start npm run bridge first, then connect VoxelFlow in Blockbench.");
     }
   }
   const port = Number(process.env.VOXELFLOW_PORT ?? disk.port ?? 32123), token = process.env.VOXELFLOW_TOKEN ?? disk.token;
@@ -156,7 +168,7 @@ var descriptions = {
   cancel_operation: "Cancel a pending approval without changing the scene. Running exports must be cancelled in the native Save dialog.",
   preview_animation: "Select and play or stop an existing idle, walk, or attack clip in the real Blockbench animation timeline. Does not create or edit keyframes."
 };
-var server = new McpServer({ name: "voxelflow-studio", version: "0.2.0" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. You may design new object types: the generic cube blueprint is not limited to presets. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
+var server = new McpServer({ name: "voxelflow-studio", version: "0.3.0" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. You may design new object types: the generic cube blueprint is not limited to presets. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
 for (const name of toolNames) {
   const mutation = mutationNames.includes(name);
   server.registerTool(name, {

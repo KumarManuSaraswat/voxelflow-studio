@@ -220,17 +220,21 @@ async function startBridge(options) {
 // packages/mcp-server/src/config.ts
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
+import { homedir } from "node:os";
 var projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-var sessionFile = resolve(projectRoot, ".local/bridge.json");
+var desktopMode = process.argv.includes("--desktop");
+var sessionFile = resolve(process.env.VOXELFLOW_STATE_DIR ?? (desktopMode ? resolve(homedir(), ".voxelflow-studio") : resolve(projectRoot, ".local")), "bridge.json");
 
 // packages/mcp-server/src/bridge-cli.ts
 var port = Number(process.env.VOXELFLOW_PORT ?? 32123);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error("VOXELFLOW_PORT must be between 1024 and 65535.");
 var token = process.env.VOXELFLOW_TOKEN ?? randomBytes(32).toString("hex");
 var bridge = await startBridge({ port, token });
-await mkdir(dirname2(sessionFile), { recursive: true });
+await mkdir(dirname2(sessionFile), { recursive: true, mode: 448 });
 await writeFile(sessionFile, JSON.stringify({ port, token }), { mode: 384 });
-console.error(`VoxelFlow bridge listening on 127.0.0.1:${port}
+console.error(desktopMode ? `VoxelFlow companion ready on 127.0.0.1:${port}.
+Open Blockbench \u2192 VoxelFlow \u2192 Connect. The connection is filled in automatically.
+Keep this window open while using VoxelFlow. Close it or press Ctrl+C to stop.` : `VoxelFlow bridge listening on 127.0.0.1:${port}
 Paste this session token into Blockbench \u2192 VoxelFlow \u2192 Connect:
 ${token}
 Keep this terminal open. The token stays local and changes on restart.`);
