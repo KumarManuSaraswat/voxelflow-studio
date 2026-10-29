@@ -1,42 +1,27 @@
-# Earlier 90-second demo
+# Create your first model
 
-For the current desktop beta, use the [hackathon presenter guide](hackathon-demo.md), with one-, three-, and five-minute versions, copyable prompts, preflight checks, and offline recovery. The developer workflow below is retained as an earlier robot demonstration.
+VoxelFlow connects a supported local AI host to the real Blockbench editor. Start with the [installation guide](../plugins/voxelflow-studio/INSTALL.md), then use this workflow to create and export an editable prop.
 
-## Prompt-to-prop demo (0.2)
+## Connect
 
-After the connection setup below, ask: “Use VoxelFlow to create a brown leather adventurer backpack with gold buckles, a front pocket, a handle, and shoulder straps.” Approve the plan in Blockbench, orbit the editable result, then ask to change its leather to forest green. Approve that color change, validate, and export. The same general tool accepts a wizard staff, lantern, sword, chest, or another cube-based design.
+Start the companion, connect Blockbench, and open a fresh local chat with VoxelFlow installed. Ask the host to check the live editor status. Require `connected: true` and confirm `create_prop` is available. From a developer checkout, `npm run doctor` checks the package, tools, and editor connection.
 
-If the ChatGPT account connection is not configured, disclose that limitation and use `npm run demo -- --prop bag` for the real SDK-to-editor path, or the offline Bag/Staff examples. Saved native examples and screenshots are in `examples/props` and `docs/evidence`. The sequence below remains a separate animated-robot demo.
+## Describe a prop
 
-## Before the timer
+> Use VoxelFlow Studio to create a brown leather adventurer backpack with gold buckles, a front pocket, a handle, and shoulder straps. Use the general prop tool. Explain the design, submit once, and wait for my approval in Blockbench. Check the operation before reporting completion.
 
-Run `npm ci`, `npm run build`, and `npm run bridge`. Install the built plugin, connect its token, and configure your MCP host using [the setup guide](mcp-integration.md). Confirm `get_editor_status` returns `connected: true`. Arrange Blockbench beside the chat, keep VoxelFlow at the top of the sidebar, and choose a convenient export folder. Rehearse host latency; the schedule assumes the assistant responds promptly.
+Review the proposed geometry and materials in Blockbench, then choose **Apply change**. Ask the assistant to inspect the actual project and validate it. A response saying `pending_approval` acknowledges a proposal; only `applied` confirms completion.
 
-If an AI host account is unavailable, run `npm run demo` as the disclosed official-SDK MCP demonstration. It uses the same real tool/approval/editor path, but does not demonstrate natural-language interpretation. The plugin's preset interface also works offline.
+## Refine and save
 
-## Live sequence
+Ask the assistant to inspect the current material names before requesting a color change. Named material edits preserve geometry and painted pixels. Approve the change in Blockbench. The Undo tool can revert the last VoxelFlow edit and refuses to undo unrelated artist work.
 
-| Time | Action and narration |
-| --- | --- |
-| 0–10 s | Show Blockbench and the connected indicator. “VoxelFlow turns an artist's brief into editable game assets, with approval at each change.” |
-| 10–25 s | Send the prompt below. Show the structured plan and the native review dialog. Click Apply change. |
-| 25–40 s | Orbit the robot. Expand the Outliner to show elbows and knees. “These are real cubes, a PNG texture, and an articulated hierarchy.” |
-| 40–55 s | Animate → Idle, then Walk, then Punch. Show the native timeline keyframes. “Breathing, alternating gait, and a punch with windup and recovery.” |
-| 55–65 s | Set Speed to 1.5, review and approve the animation update. “Timing changes without rebuilding the robot.” |
-| 65–77 s | Export → Run quality checks. Show Passed / Warning / Failed. Explain the explicit engine-testing warning. |
-| 77–88 s | Review Bedrock export, approve, and save the ZIP. Show geometry, texture, animations, controllers, and editable source. |
-| 88–90 s | “Creative control stays with the artist. The next milestone is behavior-pack integration and in-game testing.” |
+For export, ask: “Validate the current model, then propose a Bedrock resource asset export.” Review the checks, approve export, and choose a destination in the native Save dialog. A cancelled save is not a successful export. The ZIP contains editable source and resource assets; game item registration and runtime testing are separate work.
 
-Prompt:
+## Explore examples
 
-> Use VoxelFlow Studio to create a 40-pixel slender Minecraft robot with blue armor, gold trim, cyan eyes, and idle, walk, and powerful punch animations. First check the live editor and present the plan. Submit creation once, then wait for my approval in Blockbench and check the operation result. Preview walk and punch. Validate the asset and prepare a Bedrock export when I ask. Explain any unsupported request clearly.
+Open the saved [bag](../examples/props/bag/adventurer_bag.bbmodel), [staff](../examples/props/staff/arcane_staff.bbmodel), [lantern](../examples/props/lantern/brass_festival_lantern.bbmodel), or [Atlas robot](../examples/robot/atlas_robot.bbmodel) in Blockbench. Bag and Staff examples can also be created offline from the VoxelFlow panel. New natural-language interpretation needs a connected AI host.
 
-For the final export, ask “Validate the current model, then propose the Bedrock export.” Approval and the Save dialog remain in Blockbench. A tool response saying `pending_approval` is not a completed result.
+The robot is a separate animated preset with idle, walk, and attack clips. General props are static and can contain up to 128 cubes, 16 materials, and 32 groups. Arbitrary creature rigging, real emissive effects, wearable behavior, and gameplay are not implemented.
 
-## Be precise on stage
-
-Working: editable geometry/PNG/native animations, human review, Undo, live MCP tools, deterministic quality checks, a saved resource asset ZIP, speed and palette changes without recreating geometry.
-
-Not demonstrated as complete: arbitrary creature generation, AI image synthesis, automatic rigging of arbitrary meshes, true emissive eyes, a behavior pack/playable mob, Minecraft runtime compatibility, or a ChatGPT account connection unless you have separately configured and tested it.
-
-Recovery: if approval reports a changed scene, submit a fresh plan after inspecting it. If disconnected, reconnect with the current bridge token. The native sample `examples/robot/atlas_robot.bbmodel` and captured ZIP are available for showing saved results, but disclose that they are prerecorded artifacts if used as fallback.
+Developers can exercise the official SDK path with `npm run demo -- --prop bag` or `--prop staff`, following [MCP setup](mcp-integration.md). These commands use structured examples rather than natural-language interpretation. See [verification](verification.md) for tested paths and platform limits.

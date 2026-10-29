@@ -30,7 +30,6 @@ jobs:
       - run: npm run check
       - run: npm run package:desktop
       - run: npm run verify:desktop
-      - run: npm run package:hackathon
       - run: npm run package
       - name: Publish verified beta assets
         shell: pwsh
@@ -42,8 +41,6 @@ jobs:
             "dist/voxelflow-desktop-beta-$releaseVersion.zip",
             "dist/voxelflow-plugin-$releaseVersion.zip",
             "dist/voxelflow-studio-$releaseVersion.zip",
-            "dist/voxelflow-hackathon-kit-$releaseVersion.zip",
-            'dist/HACKATHON-SHA256SUMS.txt',
             'dist/DESKTOP-SHA256SUMS.txt',
             'dist/SHA256SUMS.txt',
             'dist/voxelflow_studio.js',

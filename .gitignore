@@ -5,3 +5,5 @@ coverage/
 *.log
 .env
 .vercel/
+output/pdf/
+tmp/pdfs/

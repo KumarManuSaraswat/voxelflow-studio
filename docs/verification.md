@@ -4,17 +4,17 @@ Tested on 2026-10-29 with Windows, Node 24.11.1, npm 11.6.2, and the installed B
 
 ## Automated results
 
-### Version 0.3.2: real prompt rehearsal
+### Version 0.3.2: live prompt integration
 
-The first Codex CLI rehearsal exposed a production compatibility bug: tuple-style coordinate schemas caused the host to skip `create_prop`. Version 0.3.2 uses homogeneous numeric arrays of exactly three values, preserving core bounds and tuple output. The MCP integration test now checks the advertised schema. All **84 tests in 7 files**, type checking, build, examples, and fresh-extraction desktop verification pass.
+The first Codex CLI integration test exposed a production compatibility bug: tuple-style coordinate schemas caused the host to skip `create_prop`. Version 0.3.2 uses homogeneous numeric arrays of exactly three values, preserving core bounds and tuple output. The MCP integration test now checks the advertised schema. All **84 tests in 7 files**, type checking, build, examples, and fresh-extraction desktop verification pass.
 
-A subsequent real **Codex CLI** run with automatic approval review designed a brass festival lantern from a natural-language brief, called `create_prop` once, and stopped at `pending_approval`. After the native Blockbench approval, the operation was **applied**: **20 editable cubes, 5 part groups plus root, 4 materials**, and a 128×16 PNG atlas. Live inspection/validation returned **5 passed, 1 engine-unverified warning, 0 failed**. Evidence: [live operation and validation](evidence/hackathon-live.json), [actual editor screenshot](evidence/festival-lantern.png). The AI call created the proposal; native approval and subsequent verification were performed separately during rehearsal.
+A subsequent real **Codex CLI** run with automatic approval review designed a brass festival lantern from a natural-language brief, called `create_prop` once, and stopped at `pending_approval`. After the native Blockbench approval, the operation was **applied**: **20 editable cubes, 5 part groups plus root, 4 materials**, and a 128×16 PNG atlas. Live inspection/validation returned **5 passed, 1 engine-unverified warning, 0 failed**. Evidence: [live operation and validation](evidence/lantern-live.json), [actual editor screenshot](evidence/festival-lantern.png). The AI call created the proposal; native approval and subsequent verification were performed separately during rehearsal.
 
-The headless `never` approval policy initially blocked the write tool; the successful run used the supported automatic approval reviewer, retaining native Blockbench approval. An idle connection also needed reconnecting. The presenter guide covers both. This is a verified Codex CLI path, not a completed ChatGPT account onboarding or a public-directory listing. A fresh interactive chat should still be rehearsed before presenting.
+The headless `never` approval policy initially blocked the write tool; the successful run used the supported automatic approval reviewer, retaining native Blockbench approval. An idle connection also needed reconnecting. This is a verified Codex CLI path, not a completed ChatGPT account onboarding or a public-directory listing. Verify tool access in a fresh interactive chat after upgrading.
 
-The bundled doctor reports four checks (Node, package, MCP discovery, live Blockbench). Its extracted kit passed all four against Blockbench 5.2.2. It deliberately does not claim to test AI-host permissions or natural-language behavior.
+The setup doctor reports four checks (Node, package, MCP discovery, live Blockbench). All four passed against Blockbench 5.2.2. It deliberately does not claim to test AI-host permissions or natural-language behavior.
 
-The lantern also completed native export approval and Save: an eight-file ZIP, 20-cube editable source, and a passing package-reference check. The saved source is included as an offline rehearsal backup in the hackathon kit.
+The lantern also completed native export approval and Save: an eight-file ZIP, 20-cube editable source, and a passing package-reference check. The editable source is available in `examples/props/lantern`.
 
 ### Version 0.3: desktop packaging
 

@@ -83,12 +83,10 @@ Load `dist/voxelflow_studio.js` in Blockbench. Run `npm run bridge`, then connec
 | `npm run package:desktop` | Build both standalone desktop ZIPs |
 | `npm run verify:desktop` | Check a fresh extraction and bundled MCP startup |
 | `npm run doctor` | Read-only local package, MCP discovery, and editor preflight |
-| `npm run package:hackathon` | Package an offline presenter kit after building the desktop ZIP |
 | `npm run package` | Package the source, builds, examples, and community docs |
 
 [Architecture](docs/architecture.md) · [MCP setup](docs/mcp-integration.md) · [Prompt workflow](docs/prompt-to-model.md) · [Manual checks](docs/manual-smoke-test.md) · [Support](SUPPORT.md)
 
-Presenting the project? Use the [hackathon guide](docs/hackathon-demo.md) for adaptable scripts, copyable prompts, and offline recovery.
 
 ## Build with us
 
