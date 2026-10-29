@@ -1,6 +1,8 @@
 # Bedrock resource asset integration
 
-The live ZIP contains ten files: geometry, a PNG, animation definitions, an animation controller, a client entity, a render controller, a resource manifest, the actual validation report, integration notes, and a native Blockbench source file. It contains no behavior pack, spawn egg, or game-tested mob.
+The live robot ZIP contains ten files: geometry, a PNG, animation definitions, an animation controller, a client entity, a render controller, a resource manifest, the actual validation report, integration notes, and a native Blockbench source file. A static prop ZIP contains eight files, omitting animation definitions and their controller. Neither contains gameplay definitions or a game-tested item/mob.
+
+For bags, staffs, and other props, the export supplies a static entity scaffold. To hold or wear one as an item, add matching item/attachable definitions and hand/body transforms in your Bedrock project. To display it as a world entity, add a behavior entity with the matching identifier. Static props do not need humanoid mapping or idle/walk/attack clips. Custom prop animation export is not included in VoxelFlow 0.2; use Blockbench's native exporter for that workflow.
 
 1. Extract the ZIP into a resource-pack directory, or merge its resource files into an existing pack. When merging, retain the destination pack's manifest and resolve identifier collisions intentionally.
 2. Create a behavior entity with the same identifier as the client entity, by default `voxelflow:atlas_robot`. Configure health, collision, movement, navigation, targeting, attack behavior, and spawn rules appropriate to your game.

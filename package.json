@@ -1,6 +1,6 @@
 {
   "name": "voxelflow-studio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -14,10 +14,11 @@
     "start": "node packages/mcp-server/dist/server.js",
     "bridge": "node packages/mcp-server/dist/bridge-cli.js",
     "examples": "tsx scripts/examples.ts",
+    "examples:props": "tsx scripts/prop-examples.ts",
     "demo": "tsx scripts/demo-client.ts",
     "verify:live-export": "tsx scripts/verify-live-export.ts",
     "package": "node scripts/package.mjs",
-    "check": "npm run typecheck && npm test && npm run build && npm run examples"
+    "check": "npm run typecheck && npm test && npm run build && npm run examples && npm run examples:props"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",

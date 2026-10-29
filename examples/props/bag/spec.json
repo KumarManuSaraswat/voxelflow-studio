@@ -1,0 +1,585 @@
+{
+  "name": "adventurer_bag",
+  "namespace": "voxelflow",
+  "description": "Brown leather adventurer backpack with gold buckles, front pocket, carry handle, and two shoulder straps.",
+  "materials": [
+    {
+      "name": "leather",
+      "color": "#92502c"
+    },
+    {
+      "name": "dark_leather",
+      "color": "#60351f"
+    },
+    {
+      "name": "strap",
+      "color": "#3a241b"
+    },
+    {
+      "name": "brass",
+      "color": "#deb34f"
+    }
+  ],
+  "parts": [
+    {
+      "name": "leather_body",
+      "group": "body",
+      "from": [
+        -5,
+        1,
+        -2
+      ],
+      "to": [
+        5,
+        13,
+        2.5
+      ],
+      "material": "leather",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "reinforced_base",
+      "group": "body",
+      "from": [
+        -5.3,
+        0.5,
+        -2.3
+      ],
+      "to": [
+        5.3,
+        2,
+        2.8
+      ],
+      "material": "dark_leather",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rounded_top",
+      "group": "body",
+      "from": [
+        -4.5,
+        13,
+        -1.5
+      ],
+      "to": [
+        4.5,
+        15,
+        2.2
+      ],
+      "material": "leather",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "overhanging_flap",
+      "group": "flap",
+      "from": [
+        -5.3,
+        11,
+        -2.6
+      ],
+      "to": [
+        5.3,
+        14.5,
+        -1.9
+      ],
+      "material": "dark_leather",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "front_pocket",
+      "group": "pocket",
+      "from": [
+        -3.4,
+        3,
+        -3.3
+      ],
+      "to": [
+        3.4,
+        8,
+        -2
+      ],
+      "material": "leather",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "pocket_flap",
+      "group": "pocket",
+      "from": [
+        -3.6,
+        7.3,
+        -3.6
+      ],
+      "to": [
+        3.6,
+        8.5,
+        -2.7
+      ],
+      "material": "dark_leather",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "pocket_clasp",
+      "group": "pocket",
+      "from": [
+        -0.5,
+        6.6,
+        -3.8
+      ],
+      "to": [
+        0.5,
+        7.6,
+        -3.5
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_front_strap",
+      "group": "straps",
+      "from": [
+        -3.55,
+        8.7,
+        -2.95
+      ],
+      "to": [
+        -2.45,
+        14.4,
+        -2.6
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_buckle_top",
+      "group": "buckles",
+      "from": [
+        -3.85,
+        10.6,
+        -3.2
+      ],
+      "to": [
+        -2.15,
+        10.95,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_buckle_bottom",
+      "group": "buckles",
+      "from": [
+        -3.85,
+        9.2,
+        -3.2
+      ],
+      "to": [
+        -2.15,
+        9.55,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_buckle_left",
+      "group": "buckles",
+      "from": [
+        -3.85,
+        9.2,
+        -3.2
+      ],
+      "to": [
+        -3.5,
+        10.95,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_buckle_right",
+      "group": "buckles",
+      "from": [
+        -2.5,
+        9.2,
+        -3.2
+      ],
+      "to": [
+        -2.15,
+        10.95,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_shoulder_top",
+      "group": "shoulder_straps",
+      "from": [
+        -3.6,
+        12.5,
+        2.2
+      ],
+      "to": [
+        -2.4,
+        14,
+        4.4
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_shoulder_back",
+      "group": "shoulder_straps",
+      "from": [
+        -3.6,
+        3,
+        3.5
+      ],
+      "to": [
+        -2.4,
+        13.5,
+        4.4
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_shoulder_bottom",
+      "group": "shoulder_straps",
+      "from": [
+        -3.6,
+        2,
+        2.2
+      ],
+      "to": [
+        -2.4,
+        3.5,
+        4.4
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_rivet",
+      "group": "buckles",
+      "from": [
+        -3.25,
+        12.9,
+        -3.15
+      ],
+      "to": [
+        -2.75,
+        13.4,
+        -2.95
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_front_strap",
+      "group": "straps",
+      "from": [
+        2.45,
+        8.7,
+        -2.95
+      ],
+      "to": [
+        3.55,
+        14.4,
+        -2.6
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_buckle_top",
+      "group": "buckles",
+      "from": [
+        2.15,
+        10.6,
+        -3.2
+      ],
+      "to": [
+        3.85,
+        10.95,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_buckle_bottom",
+      "group": "buckles",
+      "from": [
+        2.15,
+        9.2,
+        -3.2
+      ],
+      "to": [
+        3.85,
+        9.55,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_buckle_left",
+      "group": "buckles",
+      "from": [
+        2.15,
+        9.2,
+        -3.2
+      ],
+      "to": [
+        2.5,
+        10.95,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_buckle_right",
+      "group": "buckles",
+      "from": [
+        3.5,
+        9.2,
+        -3.2
+      ],
+      "to": [
+        3.85,
+        10.95,
+        -2.9
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_shoulder_top",
+      "group": "shoulder_straps",
+      "from": [
+        2.4,
+        12.5,
+        2.2
+      ],
+      "to": [
+        3.6,
+        14,
+        4.4
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_shoulder_back",
+      "group": "shoulder_straps",
+      "from": [
+        2.4,
+        3,
+        3.5
+      ],
+      "to": [
+        3.6,
+        13.5,
+        4.4
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_shoulder_bottom",
+      "group": "shoulder_straps",
+      "from": [
+        2.4,
+        2,
+        2.2
+      ],
+      "to": [
+        3.6,
+        3.5,
+        4.4
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_rivet",
+      "group": "buckles",
+      "from": [
+        2.75,
+        12.9,
+        -3.15
+      ],
+      "to": [
+        3.25,
+        13.4,
+        -2.95
+      ],
+      "material": "brass",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "handle_left",
+      "group": "handle",
+      "from": [
+        -2,
+        14,
+        0
+      ],
+      "to": [
+        -1.2,
+        17,
+        1
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "handle_right",
+      "group": "handle",
+      "from": [
+        1.2,
+        14,
+        0
+      ],
+      "to": [
+        2,
+        17,
+        1
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "handle_top",
+      "group": "handle",
+      "from": [
+        -2,
+        16.2,
+        0
+      ],
+      "to": [
+        2,
+        17,
+        1
+      ],
+      "material": "strap",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

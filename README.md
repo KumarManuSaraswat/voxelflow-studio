@@ -1,12 +1,12 @@
 # VoxelFlow Studio
 
-An artist-first Blockbench plugin with a real local MCP companion. Create an editable robot, recolor its pixel atlas, inspect its joints, preview native animations, and export a checked Minecraft Bedrock resource asset package. The guided interface works without an AI account or API key.
+Describe a Minecraft-style object in ChatGPT or Codex; VoxelFlow turns the assistant's structured design into an editable Blockbench model. Version 0.2 adds a general cube-based prop builder for bags, staffs, lanterns, swords, and other objects, alongside the animated robot pipeline. Review changes in Blockbench, adjust the parts or texture, and export checked Bedrock resource assets.
 
-![VoxelFlow Studio running in Blockbench](docs/evidence/voxelflow-studio.png)
+![Backpack generated in Blockbench](docs/evidence/adventurer-bag.png)
 
-**Working vertical slice:** 43 editable cubes, 11 articulated bones, one PNG atlas, and idle / walk / punch animations with 85 native keyframes. Every scene change and export presents a review dialog in Blockbench. The assistant submits structured parameters; it cannot execute arbitrary JavaScript.
+**Prompt location: ChatGPT. Model workspace: Blockbench.** The assistant composes up to 128 cubes and 16 named materials; objects are not restricted to preset categories. Offline Bag, Staff, and Robot examples also work without an AI account. Every scene change and export presents a review dialog in Blockbench. See [prompt-to-model workflow](docs/prompt-to-model.md).
 
-**Verification:** tested in Windows Blockbench **5.2.2**, Node **24.11.1**; 59 automated tests pass. Actual MCP calls created, recolored, previewed, validated, undid, and exported a live model. See [verification evidence](docs/verification.md). Minecraft runtime and a ChatGPT/Codex account connection have not been verified; the real MCP stdio path was exercised with the official SDK client.
+**Verification:** Windows Blockbench **5.2.2**, Node **24.11.1**; 75 automated tests pass. Actual MCP calls exercise the installed editor. See [verification evidence](docs/verification.md). Minecraft runtime and a ChatGPT/Codex account connection have not been verified; the MCP stdio path was exercised with the official SDK client.
 
 ## Quick start
 
@@ -21,8 +21,8 @@ npm run check
 
 1. In Blockbench, open **File → Plugins**, select **Load Plugin from File**, and choose `dist/voxelflow_studio.js` from this project. Review Blockbench's plugin trust prompt. This is a desktop plugin; the web editor is unsupported.
 2. Open **Tools → VoxelFlow Studio**. A start-screen dialog or a dockable sidebar shows five stages: Create, Texture, Rig, Animate, Export.
-3. Choose a height, build, detail, and colors. Click **Review robot plan**, then **Apply change**. A fresh Bedrock project tab contains the complete robot, texture, rig, and clips.
-4. In **Animate**, preview Idle, Walk, or Punch. Speed and strength updates replace the selected preset keyframes after review while keeping geometry and texture.
+3. Choose **Bag** or **Staff** and review its plan, then **Apply change**. A fresh Bedrock tab contains editable parts and a PNG atlas. Choose **Robot** for height/build/colors and the existing animated character pipeline.
+4. Use **Texture** to change named colors or paint directly. Robot projects additionally support Idle, Walk, and Punch previews and speed/strength updates.
 5. In **Export**, run quality checks, review the export, approve it, and choose a ZIP destination in the native Save dialog.
 
 The preset path above is fully local. Natural-language interpretation happens in a connected MCP host, not inside an embedded paid AI service.
@@ -50,9 +50,11 @@ For a real, account-free end-to-end MCP test, open a second terminal:
 ```powershell
 npm run demo -- --status
 npm run demo
+npm run demo -- --prop bag
+npm run demo -- --prop staff
 ```
 
-The second command creates a 40-pixel slender robot, previews walk, validates the live scene, and proposes export. **Approve both proposals in Blockbench and choose a save location.** It uses the official MCP SDK client against the built stdio server and the actual editor, with no simulated responses.
+Choose one demo: the default creates an animated robot; `--prop bag` and `--prop staff` create static props. Each validates the live scene and proposes export. **Approve both proposals in Blockbench and choose a save location.** These use the official MCP SDK client against the actual editor.
 
 For Codex CLI:
 
@@ -61,7 +63,7 @@ codex mcp add voxelflow -- node "C:/path/to/VoxelBuild/packages/mcp-server/dist/
 codex mcp list
 ```
 
-Start a new Codex chat after registration. Ask: “Use VoxelFlow to create a tall blue robot with cyan eyes and idle, walk, and powerful punch animations. Show the plan, wait for my approval in Blockbench, validate it, then prepare a Bedrock export.”
+Start a new chat after registration. Ask: “Use VoxelFlow to create a brown leather backpack with gold buckles, shoulder straps, and a front pocket. Show the plan, wait for my approval in Blockbench, validate it, then prepare a Bedrock export.”
 
 See [MCP setup](docs/mcp-integration.md) for Inspector, configuration examples, the operation protocol, and ChatGPT Secure MCP Tunnel prerequisites. No ChatGPT app or tunnel was registered automatically.
 
@@ -69,8 +71,8 @@ See [MCP setup](docs/mcp-integration.md) for Inspector, configuration examples, 
 
 | Stage | Implemented behavior |
 | --- | --- |
-| Create | Atlas humanoid robot; balanced/slender/heavy build; simple/detailed geometry; height 16–64; three colors; structured AI brief |
-| Texture | Real 64×16 PNG atlas; per-face UVs; recoloring preserves pixels changed by the artist; native Paint mode |
+| Create | General static props: up to 128 cubes, 16 colors, 32 groups, rotations/pivots; Bag/Staff examples; animated Atlas robot with height/build/detail controls |
+| Texture | Real PNG atlas (props 128×16, robot 64×16), per-face UVs, named recoloring preserving painted pixels, native Paint mode |
 | Rig | Root, torso, head, shoulders/elbows, hips/knees; conservative bone-name detection and manual mapping of existing humanoids |
 | Animate | Editable native idle, walk, attack; preview; speed 0.25–3×; strength 0.1–1.5×; loop checks |
 | Export | Live quality report; Bedrock geometry, PNG, clips, controllers, client entity, manifest, source `.bbmodel`; native Save dialog |
@@ -86,7 +88,11 @@ Left/right means the character's own left/right; front faces negative Z in the e
 | --- | --- |
 | Installable standalone plugin | [`dist/voxelflow_studio.js`](dist/voxelflow_studio.js) |
 | Built MCP server | [`packages/mcp-server/dist/server.js`](packages/mcp-server/dist/server.js) |
-| Complete release archive | [`dist/voxelflow-studio-0.1.0.zip`](dist/voxelflow-studio-0.1.0.zip) |
+| Complete release archive | [`dist/voxelflow-studio-0.2.0.zip`](dist/voxelflow-studio-0.2.0.zip) |
+| Editable bag and staff samples | [`examples/props/`](examples/props/) |
+| Bag resource assets | [`dist/adventurer_bag_bedrock_assets.zip`](dist/adventurer_bag_bedrock_assets.zip) |
+| Bag exported from the actual editor, with native source | [`dist/adventurer_bag_live_bedrock_assets.zip`](dist/adventurer_bag_live_bedrock_assets.zip) |
+| Staff resource assets | [`dist/arcane_staff_bedrock_assets.zip`](dist/arcane_staff_bedrock_assets.zip) |
 | Real live-editor export, including native source | [`dist/atlas_robot_live_bedrock_assets.zip`](dist/atlas_robot_live_bedrock_assets.zip) |
 | Editable sample created in Blockbench | [`examples/robot/atlas_robot.bbmodel`](examples/robot/atlas_robot.bbmodel) |
 | Reproducible pure-core sample ZIP | [`dist/atlas_robot_bedrock_assets.zip`](dist/atlas_robot_bedrock_assets.zip) |
@@ -96,7 +102,9 @@ Left/right means the character's own left/right; front faces negative Z in the e
 
 The pure-core sample has nine files; live export adds a tenth file, the native source. `npm run examples` regenerates the pure sample; it intentionally leaves the captured live export and source intact. `npm run verify:live-export` checks the captured ZIP and extracts its native source. `npm run package` creates and verifies the release ZIP after a build. The release includes source and builds; run `npm ci` after extraction for the Node companion.
 
-The ZIP is an **integration-ready resource asset package**, not a playable mob. A matching behavior entity, spawn/attack configuration, and in-game verification are still required. See [Bedrock integration](docs/bedrock-integration.md).
+`npm run examples:props` generates the prop specifications, textures, reports, and seven-file pure prop ZIPs. Live prop exports add native source as an eighth file. Structural revisions through MCP currently create a new copy; individual cube editing remains available in Blockbench.
+
+The ZIP is a **resource asset package**. A registered inventory item, wearable bag, functioning staff, or playable mob still needs the corresponding item/attachable or behavior configuration and in-game verification. See [Bedrock integration](docs/bedrock-integration.md).
 
 ## Troubleshooting
 

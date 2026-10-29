@@ -8,6 +8,7 @@ export function report(findings: Finding[]): ValidationReport {
   return { ready:counts.failed===0, counts, findings, engineVerified:false };
 }
 export function validateAsset(asset: Asset, requireClips = true): ValidationReport {
+  const prop=asset.kind==='prop';
   const f: Finding[] = [];
   const fail = (stage: Finding['stage'], code:string, message:string, correction:string) => f.push({stage,status:'failed',code,message,correction});
   const warn = (stage: Finding['stage'], code:string, message:string, correction:string) => f.push({stage,status:'warning',code,message,correction});
@@ -24,6 +25,7 @@ export function validateAsset(asset: Asset, requireClips = true): ValidationRepo
     const seen = new Set<string>([bone.name]); let p=bone.parent;
     while(p && boneNames.has(p)) { if(seen.has(p)) {fail('rig','rig.cycle',`The hierarchy loops back into ${bone.name}.`,'Move the bone outside its own children.');break;} seen.add(p);p=asset.bones.find(b=>b.name===p)?.parent; }
   }
+  if(!prop){
   const mapped = Object.values(asset.mapping);
   if (new Set(mapped).size !== mapped.length) fail('rig','rig.mapping_duplicate','One bone is assigned to multiple body parts.','Map each body part to a different bone.');
   for (const role of roles) {
@@ -39,6 +41,7 @@ export function validateAsset(asset: Asset, requireClips = true): ValidationRepo
   for(const limb of ['upper_arm','upper_leg'] as const) {
     const l=asset.bones.find(b=>b.name===asset.mapping[`left_${limb}`]), r=asset.bones.find(b=>b.name===asset.mapping[`right_${limb}`]);
     if(l && r && l.pivot[0]<=r.pivot[0]) fail('rig','rig.sides',`The left and right ${limb.replaceAll('_',' ')} joints are reversed or overlap.`,'Left is the character’s left (+X in Blockbench). Check the mapping.');
+  }
   }
   const textures = new Map(asset.textures.map(t=>[t.id,t]));
   if(asset.textures.length !== 1) fail('texture','texture.count','This export supports one texture atlas.','Combine textures into one atlas before exporting.');
@@ -61,7 +64,8 @@ export function validateAsset(asset: Asset, requireClips = true): ValidationRepo
       if(face.uv[0]===face.uv[2]||face.uv[1]===face.uv[3]) fail('texture','texture.empty_uv',`${cube.name}: ${side} has a zero-area UV.`,'Expand its UV rectangle to cover pixels.');
     }
   }
-  if(requireClips) for(const c of ['idle','walk','attack']) if(!asset.animations.some(a=>a.name===`animation.${asset.namespace}.${asset.name}.${c}`)) fail('animation','animation.missing',`The ${c} animation is missing.`,'Generate the three core animations.');
+  if(prop&&asset.animations.length)fail('animation','animation.prop_static','This prop export currently supports static objects.','Keep a static copy for VoxelFlow export, or use native Blockbench export for custom prop animations.');
+  if(requireClips&&!prop) for(const c of ['idle','walk','attack']) if(!asset.animations.some(a=>a.name===`animation.${asset.namespace}.${asset.name}.${c}`)) fail('animation','animation.missing',`The ${c} animation is missing.`,'Generate the three core animations.');
   const animNames=new Set<string>();
   for(const clip of asset.animations) {
     if(animNames.has(clip.name)) fail('animation','animation.duplicate',`Animation ${clip.name} is duplicated.`,'Give each clip a unique name.'); animNames.add(clip.name);
@@ -89,7 +93,7 @@ export function validateAsset(asset: Asset, requireClips = true): ValidationRepo
     if(!moving) fail('animation','animation.ineffective',`${clip.name} has no changing transforms.`,'Add at least two distinct poses.');
   }
   if(!safeName.safeParse(asset.name).success||!safeName.safeParse(asset.namespace).success) fail('export','export.identifier','The entity name or namespace is invalid.','Use lowercase names beginning with a letter.');
-  for(const stage of ['geometry','rig','texture','animation','export'] as const) if(!f.some(x=>x.stage===stage && x.status==='failed')) pass(stage,{geometry:`${asset.cubes.length} editable cubes have valid dimensions.`,rig:`${asset.bones.length} bones form a valid mapped humanoid.`,texture:'All faces reference the PNG atlas and valid UVs.',animation:`${asset.animations.length} clips contain effective keyframes and valid bone references.`,export:'Names and supported features are consistent with the Bedrock asset exporter.'}[stage]);
+  for(const stage of ['geometry','rig','texture','animation','export'] as const) if(!f.some(x=>x.stage===stage && x.status==='failed')) pass(stage,{geometry:`${asset.cubes.length} editable cubes have valid dimensions.`,rig:prop?`${asset.bones.length} object groups form a valid hierarchy; no humanoid rig is required.`:`${asset.bones.length} bones form a valid mapped humanoid.`,texture:'All faces reference the PNG atlas and valid UVs.',animation:prop?'Static prop: character animations are not required.':`${asset.animations.length} clips contain effective keyframes and valid bone references.`,export:'Names and supported features are consistent with the Bedrock asset exporter.'}[stage]);
   warn('export','export.engine_unverified','Bedrock assets are structurally checked; Minecraft runtime has not been tested.','Integrate the resource assets with a behavior entity and test in Minecraft.');
   return report(f);
 }

@@ -19749,6 +19749,34 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     target: external_exports.literal("bedrock").default("bedrock"),
     animations: AnimationOptionsSchema.prefault({})
   }).strict();
+  var PropMaterialSchema = external_exports.object({ name: safeName, color: external_exports.string().regex(/^#[0-9a-fA-F]{6}$/) }).strict();
+  var PropMaterialsSchema = external_exports.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
+  var propPosition = external_exports.tuple([external_exports.number().min(-128).max(128), external_exports.number().min(-128).max(128), external_exports.number().min(-128).max(128)]);
+  var propRotation = external_exports.tuple([external_exports.number().min(-180).max(180), external_exports.number().min(-180).max(180), external_exports.number().min(-180).max(180)]);
+  var PropPartSchema = external_exports.object({
+    name: safeName,
+    group: safeName.default("root"),
+    from: propPosition.describe("Minimum corner [x,y,z] in pixels. Y is up, front is negative Z."),
+    to: propPosition.describe("Maximum corner; every component must be greater than from."),
+    material: safeName,
+    rotation: propRotation.default([0, 0, 0]),
+    pivot: propPosition.optional().describe("Rotation pivot in model coordinates; defaults to this cube center.")
+  }).strict().refine((p) => p.to.every((v, i2) => v > p.from[i2]), "Every cube must have positive width, height and depth.");
+  var PropSpecSchema = external_exports.object({
+    name: safeName,
+    namespace: safeName.default("voxelflow"),
+    description: external_exports.string().min(1).max(600).describe("Artist-facing description of the designed object and requested details."),
+    materials: PropMaterialsSchema,
+    parts: external_exports.array(PropPartSchema).min(1).max(128).describe("Compose ANY block-style prop from editable cubes; not restricted to named presets.")
+  }).strict().superRefine((spec, ctx) => {
+    const materials = new Set(spec.materials.map((m) => m.name)), names = /* @__PURE__ */ new Set();
+    spec.parts.forEach((part, i2) => {
+      if (names.has(part.name)) ctx.addIssue({ code: "custom", path: ["parts", i2, "name"], message: "Part names must be unique." });
+      names.add(part.name);
+      if (!materials.has(part.material)) ctx.addIssue({ code: "custom", path: ["parts", i2, "material"], message: "Use a material defined in materials." });
+    });
+    if ((/* @__PURE__ */ new Set(["root", ...spec.parts.map((p) => p.group)])).size > 32) ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 32 named groups." });
+  });
   var roles = ["root", "torso", "head", "left_upper_arm", "left_lower_arm", "right_upper_arm", "right_lower_arm", "left_upper_leg", "left_lower_leg", "right_upper_leg", "right_lower_leg"];
   var RigMappingSchema = external_exports.object(Object.fromEntries(roles.map((r) => [r, external_exports.string().min(1).max(128)]))).strict();
   var faces = ["north", "east", "south", "west", "up", "down"];
@@ -19757,6 +19785,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     get_editor_status: external_exports.object({}).strict(),
     inspect_project: external_exports.object({}).strict(),
     create_model: external_exports.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
+    create_prop: external_exports.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
+    apply_prop_materials: external_exports.object({ request_id: requestId, materials: PropMaterialsSchema.describe("Update existing named prop materials; omitted materials keep their colors.") }).strict(),
     apply_materials: external_exports.object({ request_id: requestId, palette: PaletteSchema }).strict(),
     generate_rig: external_exports.object({ request_id: requestId, mapping: RigMappingSchema.optional() }).strict(),
     generate_animations: external_exports.object({ request_id: requestId, options: AnimationOptionsSchema }).strict(),
@@ -19768,7 +19798,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     preview_animation: external_exports.object({ clip: ClipName, playing: external_exports.boolean().default(true) }).strict()
   };
   var toolNames = Object.keys(toolSchemas);
-  var mutationNames = ["create_model", "apply_materials", "generate_rig", "generate_animations", "export_asset", "undo_last_change"];
+  var mutationNames = ["create_model", "create_prop", "apply_prop_materials", "apply_materials", "generate_rig", "generate_animations", "export_asset", "undo_last_change"];
   function parseTool(name, args) {
     if (!Object.hasOwn(toolSchemas, name)) throw new Error(`Unknown operation: ${name}`);
     return { name, args: toolSchemas[name].parse(args) };
@@ -20747,6 +20777,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     return { ready: counts.failed === 0, counts, findings, engineVerified: false };
   }
   function validateAsset(asset, requireClips = true) {
+    const prop = asset.kind === "prop";
     const f = [];
     const fail = (stage, code, message, correction) => f.push({ stage, status: "failed", code, message, correction });
     const warn = (stage, code, message, correction) => f.push({ stage, status: "warning", code, message, correction });
@@ -20771,24 +20802,26 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         p = asset.bones.find((b) => b.name === p)?.parent;
       }
     }
-    const mapped = Object.values(asset.mapping);
-    if (new Set(mapped).size !== mapped.length) fail("rig", "rig.mapping_duplicate", "One bone is assigned to multiple body parts.", "Map each body part to a different bone.");
-    for (const role of roles) {
-      const name = asset.mapping[role], b = asset.bones.find((b2) => b2.name === name);
-      if (!b) {
-        fail("rig", "rig.mapping_missing", `The ${role.replaceAll("_", " ")} has not been mapped.`, "Use Rig \u2192 Map body parts.");
-        continue;
+    if (!prop) {
+      const mapped = Object.values(asset.mapping);
+      if (new Set(mapped).size !== mapped.length) fail("rig", "rig.mapping_duplicate", "One bone is assigned to multiple body parts.", "Map each body part to a different bone.");
+      for (const role of roles) {
+        const name = asset.mapping[role], b = asset.bones.find((b2) => b2.name === name);
+        if (!b) {
+          fail("rig", "rig.mapping_missing", `The ${role.replaceAll("_", " ")} has not been mapped.`, "Use Rig \u2192 Map body parts.");
+          continue;
+        }
+        const expected = parents[role] && asset.mapping[parents[role]];
+        if (expected && b.parent !== expected) fail("rig", "rig.hierarchy", `${role.replaceAll("_", " ")} is not attached to ${parents[role]?.replaceAll("_", " ")}.`, "Connect these bones in the Outliner; mapping alone does not move joints.");
+        if (role.includes("lower")) {
+          const parent = asset.bones.find((x2) => x2.name === expected);
+          if (parent && b.pivot[1] >= parent.pivot[1] - 0.01) fail("rig", "rig.joint_position", `The ${role.replaceAll("_", " ")} joint is not below its upper joint.`, "Place the elbow at the arm bend or the knee at the leg bend.");
+        }
       }
-      const expected = parents[role] && asset.mapping[parents[role]];
-      if (expected && b.parent !== expected) fail("rig", "rig.hierarchy", `${role.replaceAll("_", " ")} is not attached to ${parents[role]?.replaceAll("_", " ")}.`, "Connect these bones in the Outliner; mapping alone does not move joints.");
-      if (role.includes("lower")) {
-        const parent = asset.bones.find((x2) => x2.name === expected);
-        if (parent && b.pivot[1] >= parent.pivot[1] - 0.01) fail("rig", "rig.joint_position", `The ${role.replaceAll("_", " ")} joint is not below its upper joint.`, "Place the elbow at the arm bend or the knee at the leg bend.");
+      for (const limb of ["upper_arm", "upper_leg"]) {
+        const l = asset.bones.find((b) => b.name === asset.mapping[`left_${limb}`]), r = asset.bones.find((b) => b.name === asset.mapping[`right_${limb}`]);
+        if (l && r && l.pivot[0] <= r.pivot[0]) fail("rig", "rig.sides", `The left and right ${limb.replaceAll("_", " ")} joints are reversed or overlap.`, "Left is the character\u2019s left (+X in Blockbench). Check the mapping.");
       }
-    }
-    for (const limb of ["upper_arm", "upper_leg"]) {
-      const l = asset.bones.find((b) => b.name === asset.mapping[`left_${limb}`]), r = asset.bones.find((b) => b.name === asset.mapping[`right_${limb}`]);
-      if (l && r && l.pivot[0] <= r.pivot[0]) fail("rig", "rig.sides", `The left and right ${limb.replaceAll("_", " ")} joints are reversed or overlap.`, "Left is the character\u2019s left (+X in Blockbench). Check the mapping.");
     }
     const textures = new Map(asset.textures.map((t) => [t.id, t]));
     if (asset.textures.length !== 1) fail("texture", "texture.count", "This export supports one texture atlas.", "Combine textures into one atlas before exporting.");
@@ -20814,7 +20847,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         if (face.uv[0] === face.uv[2] || face.uv[1] === face.uv[3]) fail("texture", "texture.empty_uv", `${cube.name}: ${side} has a zero-area UV.`, "Expand its UV rectangle to cover pixels.");
       }
     }
-    if (requireClips) {
+    if (prop && asset.animations.length) fail("animation", "animation.prop_static", "This prop export currently supports static objects.", "Keep a static copy for VoxelFlow export, or use native Blockbench export for custom prop animations.");
+    if (requireClips && !prop) {
       for (const c of ["idle", "walk", "attack"]) if (!asset.animations.some((a) => a.name === `animation.${asset.namespace}.${asset.name}.${c}`)) fail("animation", "animation.missing", `The ${c} animation is missing.`, "Generate the three core animations.");
     }
     const animNames = /* @__PURE__ */ new Set();
@@ -20847,9 +20881,108 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       if (!moving) fail("animation", "animation.ineffective", `${clip.name} has no changing transforms.`, "Add at least two distinct poses.");
     }
     if (!safeName.safeParse(asset.name).success || !safeName.safeParse(asset.namespace).success) fail("export", "export.identifier", "The entity name or namespace is invalid.", "Use lowercase names beginning with a letter.");
-    for (const stage of ["geometry", "rig", "texture", "animation", "export"]) if (!f.some((x2) => x2.stage === stage && x2.status === "failed")) pass(stage, { geometry: `${asset.cubes.length} editable cubes have valid dimensions.`, rig: `${asset.bones.length} bones form a valid mapped humanoid.`, texture: "All faces reference the PNG atlas and valid UVs.", animation: `${asset.animations.length} clips contain effective keyframes and valid bone references.`, export: "Names and supported features are consistent with the Bedrock asset exporter." }[stage]);
+    for (const stage of ["geometry", "rig", "texture", "animation", "export"]) if (!f.some((x2) => x2.stage === stage && x2.status === "failed")) pass(stage, { geometry: `${asset.cubes.length} editable cubes have valid dimensions.`, rig: prop ? `${asset.bones.length} object groups form a valid hierarchy; no humanoid rig is required.` : `${asset.bones.length} bones form a valid mapped humanoid.`, texture: "All faces reference the PNG atlas and valid UVs.", animation: prop ? "Static prop: character animations are not required." : `${asset.animations.length} clips contain effective keyframes and valid bone references.`, export: "Names and supported features are consistent with the Bedrock asset exporter." }[stage]);
     warn("export", "export.engine_unverified", "Bedrock assets are structurally checked; Minecraft runtime has not been tested.", "Integrate the resource assets with a behavior entity and test in Minecraft.");
     return report(f);
+  }
+
+  // packages/core/src/props.ts
+  var propAtlasSize = { width: 128, height: 16 };
+  function propAtlasPixels(materials) {
+    const checked = PropMaterialsSchema.parse(materials), { width, height } = propAtlasSize;
+    const pixels = new Uint8Array(width * height * 4);
+    for (let y = 0; y < height; y++) for (let x2 = 0; x2 < width; x2++) {
+      const color = checked[Math.floor(x2 / 8)]?.color ?? "#202020", offset = (y * width + x2) * 4;
+      const shade = y === 0 || x2 % 8 === 0 ? 1.12 : y > 12 ? 0.78 : x2 % 8 === 7 ? 0.9 : 1;
+      for (let channel = 0; channel < 3; channel++) pixels[offset + channel] = Math.min(255, Math.round(parseInt(color.slice(1 + channel * 2, 3 + channel * 2), 16) * shade));
+      pixels[offset + 3] = 255;
+    }
+    return pixels;
+  }
+  function recolorProp(current, before, updates) {
+    const original = PropMaterialsSchema.parse(before), changes = PropMaterialsSchema.parse(updates);
+    if (changes.some((c) => !original.some((m) => m.name === c.name))) throw new Error("Use existing material names. Inspect the prop before recoloring it.");
+    const materials = original.map((m) => changes.find((c) => c.name === m.name) ?? m);
+    const old = propAtlasPixels(original), next = propAtlasPixels(materials), pixels = current.slice();
+    if (pixels.length !== old.length) throw new Error("The prop atlas was resized; preserve it and recolor in Paint mode.");
+    let preserved = 0;
+    for (let i2 = 0; i2 < pixels.length; i2 += 4) {
+      if ([0, 1, 2, 3].every((c) => current[i2 + c] === old[i2 + c])) pixels.set(next.subarray(i2, i2 + 4), i2);
+      else preserved++;
+    }
+    return { materials, pixels, preserved };
+  }
+  function generateProp(input2) {
+    const spec = PropSpecSchema.parse(input2), groups = [.../* @__PURE__ */ new Set(["root", ...spec.parts.map((p) => p.group)])];
+    const cubes = spec.parts.map((part) => {
+      const x2 = spec.materials.findIndex((m) => m.name === part.material) * 8;
+      return {
+        id: part.name,
+        name: part.name,
+        bone: part.group,
+        from: part.from,
+        to: part.to,
+        origin: part.pivot ?? part.from.map((v, i2) => (v + part.to[i2]) / 2),
+        rotation: part.rotation,
+        inflate: 0,
+        faces: Object.fromEntries(faces.map((side) => [side, { texture: "prop_atlas", uv: [x2, 0, x2 + 8, 16], rotation: 0 }]))
+      };
+    });
+    return {
+      name: spec.name,
+      namespace: spec.namespace,
+      kind: "prop",
+      bones: groups.map((name) => ({ name, ...name === "root" ? {} : { parent: "root" }, pivot: [0, 0, 0], rotation: [0, 0, 0] })),
+      cubes,
+      textures: [{ id: "prop_atlas", name: "prop_atlas", ...propAtlasSize, png: encodePng(propAtlasPixels(spec.materials), 128, 16) }],
+      mapping: {},
+      animations: [],
+      unsupported: []
+    };
+  }
+  function propPreset(name) {
+    const parts = [];
+    const cube = (name2, from, to, material, group = "body", rotation2 = [0, 0, 0]) => parts.push({ name: name2, from, to, material, group, rotation: rotation2 });
+    if (name === "bag") {
+      cube("leather_body", [-5, 1, -2], [5, 13, 2.5], "leather");
+      cube("reinforced_base", [-5.3, 0.5, -2.3], [5.3, 2, 2.8], "dark_leather");
+      cube("rounded_top", [-4.5, 13, -1.5], [4.5, 15, 2.2], "leather");
+      cube("overhanging_flap", [-5.3, 11, -2.6], [5.3, 14.5, -1.9], "dark_leather", "flap");
+      cube("front_pocket", [-3.4, 3, -3.3], [3.4, 8, -2], "leather", "pocket");
+      cube("pocket_flap", [-3.6, 7.3, -3.6], [3.6, 8.5, -2.7], "dark_leather", "pocket");
+      cube("pocket_clasp", [-0.5, 6.6, -3.8], [0.5, 7.6, -3.5], "brass", "pocket");
+      for (const [side, x2] of [["left", -3], ["right", 3]]) {
+        cube(`${side}_front_strap`, [x2 - 0.55, 8.7, -2.95], [x2 + 0.55, 14.4, -2.6], "strap", "straps");
+        for (const [edge, from, to] of [
+          ["top", [x2 - 0.85, 10.6, -3.2], [x2 + 0.85, 10.95, -2.9]],
+          ["bottom", [x2 - 0.85, 9.2, -3.2], [x2 + 0.85, 9.55, -2.9]],
+          ["left", [x2 - 0.85, 9.2, -3.2], [x2 - 0.5, 10.95, -2.9]],
+          ["right", [x2 + 0.5, 9.2, -3.2], [x2 + 0.85, 10.95, -2.9]]
+        ]) cube(`${side}_buckle_${edge}`, [...from], [...to], "brass", "buckles");
+        cube(`${side}_shoulder_top`, [x2 - 0.6, 12.5, 2.2], [x2 + 0.6, 14, 4.4], "strap", "shoulder_straps");
+        cube(`${side}_shoulder_back`, [x2 - 0.6, 3, 3.5], [x2 + 0.6, 13.5, 4.4], "strap", "shoulder_straps");
+        cube(`${side}_shoulder_bottom`, [x2 - 0.6, 2, 2.2], [x2 + 0.6, 3.5, 4.4], "strap", "shoulder_straps");
+        cube(`${side}_rivet`, [x2 - 0.25, 12.9, -3.15], [x2 + 0.25, 13.4, -2.95], "brass", "buckles");
+      }
+      cube("handle_left", [-2, 14, 0], [-1.2, 17, 1], "strap", "handle");
+      cube("handle_right", [1.2, 14, 0], [2, 17, 1], "strap", "handle");
+      cube("handle_top", [-2, 16.2, 0], [2, 17, 1], "strap", "handle");
+      return PropSpecSchema.parse({ name: "adventurer_bag", description: "Brown leather adventurer backpack with gold buckles, front pocket, carry handle, and two shoulder straps.", materials: [{ name: "leather", color: "#92502c" }, { name: "dark_leather", color: "#60351f" }, { name: "strap", color: "#3a241b" }, { name: "brass", color: "#deb34f" }], parts });
+    }
+    cube("wooden_shaft", [-0.8, 1, -0.8], [0.8, 30, 0.8], "wood", "shaft");
+    cube("bottom_cap", [-1.1, 0, -1.1], [1.1, 2, 1.1], "gold", "fittings");
+    cube("grip", [-1.05, 10, -1.05], [1.05, 18, 1.05], "leather", "grip");
+    for (let i2 = 0; i2 < 4; i2++) cube(`grip_wrap_${i2}`, [-1.18, 10.5 + i2 * 1.8, -1.18], [1.18, 11.1 + i2 * 1.8, 1.18], "gold", "grip");
+    cube("upper_collar", [-1.35, 26, -1.35], [1.35, 28, 1.35], "gold", "fittings");
+    cube("crystal_socket", [-2.4, 29, -1.7], [2.4, 31, 1.7], "gold", "crown");
+    cube("left_prong", [-4, 29, -0.65], [-2.8, 35, 0.65], "gold", "crown", [0, 0, -20]);
+    cube("right_prong", [2.8, 29, -0.65], [4, 35, 0.65], "gold", "crown", [0, 0, 20]);
+    cube("crystal_core", [-2.1, 31, -2.1], [2.1, 37, 2.1], "crystal", "crystal", [0, 45, 0]);
+    cube("crystal_tip", [-1.3, 36, -1.3], [1.3, 40, 1.3], "crystal", "crystal", [0, 45, 0]);
+    cube("crystal_glint", [-0.45, 32, -3.05], [0.45, 36, -2.7], "highlight", "crystal");
+    cube("left_rune", [-1.6, 22, -1.4], [-0.6, 24, -0.9], "crystal", "fittings");
+    cube("right_rune", [0.6, 22, -1.4], [1.6, 24, -0.9], "crystal", "fittings");
+    return PropSpecSchema.parse({ name: "arcane_staff", description: "Wooden wizard staff with a wrapped grip, gold fittings, forked crown, and violet crystal.", materials: [{ name: "wood", color: "#62402b" }, { name: "leather", color: "#302e42" }, { name: "gold", color: "#e3b34e" }, { name: "crystal", color: "#9e64ee" }, { name: "highlight", color: "#e4ceff" }], parts });
   }
 
   // packages/core/src/exporters.ts
@@ -20857,8 +20990,14 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
   var rotation = (v) => [-v[0], -v[1], v[2]];
   function bedrockGeometry(a) {
     const rotatedUV = a.cubes.some((c) => Object.values(c.faces).some((f) => f.rotation !== 0));
+    const bounds = a.cubes.flatMap((c) => {
+      if (!c.rotation.some((v) => v !== 0)) return [c.from, c.to];
+      const radius = Math.hypot(...c.from.map((v, i2) => Math.max(Math.abs(v - c.origin[i2]), Math.abs(c.to[i2] - c.origin[i2]))));
+      return [c.origin.map((v) => v - radius), c.origin.map((v) => v + radius)];
+    });
+    const lowY = Math.min(0, ...bounds.map((p) => p[1])), highY = Math.max(0, ...bounds.map((p) => p[1]));
     return { format_version: rotatedUV ? "1.21.0" : "1.12.0", "minecraft:geometry": [{
-      description: { identifier: `geometry.${a.namespace}.${a.name}`, texture_width: a.textures[0]?.width, texture_height: a.textures[0]?.height, visible_bounds_width: Math.max(4, ...a.cubes.flatMap((c) => [Math.abs(c.from[0]) / 8, Math.abs(c.to[0]) / 8])), visible_bounds_height: Math.max(4, ...a.cubes.map((c) => c.to[1] / 8)), visible_bounds_offset: [0, 1.5, 0] },
+      description: { identifier: `geometry.${a.namespace}.${a.name}`, texture_width: a.textures[0]?.width, texture_height: a.textures[0]?.height, visible_bounds_width: Math.max(4, ...bounds.flatMap((p) => [Math.abs(p[0]) / 8 + 2, Math.abs(p[2]) / 8 + 2])), visible_bounds_height: Math.max(4, (highY - lowY) / 16 + 2), visible_bounds_offset: [0, (lowY + highY) / 32, 0] },
       bones: a.bones.map((b) => ({ name: b.name, ...b.parent ? { parent: b.parent } : {}, pivot: [-b.pivot[0], b.pivot[1], b.pivot[2]], rotation: rotation(b.rotation), cubes: a.cubes.filter((c) => c.bone === b.name).map((c) => ({ origin: [-c.to[0], c.from[1], c.from[2]], size: c.to.map((v, i2) => v - c.from[i2]), pivot: [-c.origin[0], c.origin[1], c.origin[2]], rotation: rotation(c.rotation), inflate: c.inflate, uv: Object.fromEntries(Object.entries(c.faces).filter(([, f]) => f.texture).map(([side, f]) => {
         const flip = side === "up" || side === "down";
         return [side, { uv: flip ? [f.uv[2], f.uv[3]] : [f.uv[0], f.uv[1]], uv_size: [(f.uv[2] - f.uv[0]) * (flip ? -1 : 1), (f.uv[3] - f.uv[1]) * (flip ? -1 : 1)], ...f.rotation ? { uv_rotation: f.rotation } : {} }];
@@ -20906,6 +21045,21 @@ Numeric, linear/step keyframes and per-face cube UVs are supported.
 Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verified.
 `)
     };
+    if (a.kind === "prop") {
+      delete files[`animations/${a.name}.animation.json`];
+      delete files[`animation_controllers/${a.name}.controller.json`];
+      files[`entity/${a.name}.entity.json`] = json2({ format_version: "1.10.0", "minecraft:client_entity": { description: { identifier: `${a.namespace}:${a.name}`, materials: { default: "entity_alphatest" }, textures: { default: `textures/entity/${a.name}` }, geometry: { default: `geometry.${id}` }, render_controllers: [render] } } });
+      files["INTEGRATION.txt"] = strToU8(`VoxelFlow Studio \u2014 ${a.namespace}:${a.name}
+
+Static Minecraft-style prop resource assets.
+Includes geometry, PNG, a static client-entity/render-controller scaffold, and an editable source when exported from Blockbench.
+This is not a registered inventory item, wearable backpack, or usable weapon.
+For a held/worn item, create the matching Bedrock item and attachable definitions and set its hand/body transforms. For a world entity, provide a behavior entity with the same identifier.
+No humanoid rig or character animations are required for this static object.
+Bright crystal colors are not an emissive shader.
+Minecraft runtime compatibility is NOT verified.
+`);
+    }
     if (projectJson) files[`source/${a.name}.bbmodel`] = strToU8(projectJson);
     const integrity = validatePackage(files);
     if (!integrity.ready) throw new Error("Package consistency check failed: " + integrity.findings.filter((f) => f.status === "failed").map((f) => f.message).join(" "));
@@ -20926,7 +21080,7 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
         bad("package.json", `Invalid JSON: ${path}`);
       }
     }
-    for (const folder of ["models/entity/", "textures/entity/", "animations/", "animation_controllers/", "entity/", "render_controllers/"]) if (!Object.keys(files).some((p) => p.startsWith(folder))) bad("package.missing", `Missing ${folder} files.`);
+    for (const folder of ["models/entity/", "textures/entity/", "entity/", "render_controllers/"]) if (!Object.keys(files).some((p) => p.startsWith(folder))) bad("package.missing", `Missing ${folder} files.`);
     const geometry = Object.values(parsed).flatMap((p) => p["minecraft:geometry"] ?? []), animations = Object.assign({}, ...Object.values(parsed).map((p) => p.animations ?? {})), controllers = Object.assign({}, ...Object.values(parsed).map((p) => p.animation_controllers ?? {})), renders = Object.assign({}, ...Object.values(parsed).map((p) => p.render_controllers ?? {}));
     for (const data of Object.values(parsed)) if (data["minecraft:client_entity"]) {
       const d = data["minecraft:client_entity"].description;
@@ -20971,14 +21125,26 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
       meta3 = JSON.parse(p.voxelflow_meta || "{}");
     } catch {
     }
-    return { name: meta3.name || p.name.toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/^[^a-z]+/, "") || "imported_robot", namespace: meta3.namespace || "voxelflow" };
+    return { name: meta3.name || p.name.toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/^[^a-z]+/, "") || "imported_model", namespace: meta3.namespace || "voxelflow", kind: meta3.kind === "prop" ? "prop" : "humanoid" };
+  }
+  function isPropProject() {
+    return typeof Project !== "undefined" && !!Project && identity().kind === "prop";
+  }
+  function getPropMaterials() {
+    const t = Texture.all.find((t2) => t2.voxelflow_prop_palette);
+    if (!t) return [];
+    try {
+      return PropMaterialsSchema.parse(JSON.parse(t.voxelflow_prop_palette));
+    } catch {
+      return [];
+    }
   }
   function initializeProperties() {
-    return [new Property(ModelProject, "string", "voxelflow_meta", { default: "" }), new Property(Group, "string", "voxelflow_role", { default: "" }), new Property(Texture, "string", "voxelflow_palette", { default: "" })];
+    return [new Property(ModelProject, "string", "voxelflow_meta", { default: "" }), new Property(Group, "string", "voxelflow_role", { default: "" }), new Property(Texture, "string", "voxelflow_palette", { default: "" }), new Property(Texture, "string", "voxelflow_prop_palette", { default: "" })];
   }
   function editorStatus() {
     const p = typeof Project !== "undefined" && Project ? Project : void 0;
-    return { connected: true, blockbenchVersion: Blockbench.version, project: p ? { id: p.uuid, name: p.name, format: Format.id } : null, supported: { templates: ["robot"], targets: ["bedrock"], animations: ["idle", "walk", "attack"], approvalRequired: true }, undoAvailable: p ? Undo.history[Undo.index - 1] === lastEdits.get(p) : false };
+    return { connected: true, blockbenchVersion: Blockbench.version, project: p ? { id: p.uuid, name: p.name, format: Format.id, kind: identity().kind } : null, supported: { templates: ["robot", "bag", "staff"], customProps: { tool: "create_prop", maxParts: 128, maxMaterials: 16, promptLocation: "ChatGPT or Codex" }, targets: ["bedrock"], animations: ["idle", "walk", "attack"], approvalRequired: true }, undoAvailable: p ? Undo.history[Undo.index - 1] === lastEdits.get(p) : false };
   }
   function sceneStamp() {
     if (typeof Project === "undefined" || !Project) return "no-project";
@@ -21053,19 +21219,19 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
   function inspectProject() {
     if (typeof Project === "undefined" || !Project) return { project: null, message: "Create a robot to begin." };
     const a = captureAsset();
-    return { project: { id: Project.uuid, name: Project.name, format: Format.id }, identifier: `${a.namespace}:${a.name}`, geometry: { cubes: a.cubes.length, bones: a.bones }, mapping: a.mapping, rigDetection: detectRig(a.bones), textures: a.textures.map(({ png, ...t }) => ({ ...t, pngBytes: png.length })), animations: a.animations.map((c) => ({ name: c.name, loop: c.loop, length: c.length, tracks: c.tracks.length, keyframes: c.tracks.reduce((n, t) => n + t.frames.length, 0) })), unsupported: a.unsupported };
+    return { project: { id: Project.uuid, name: Project.name, format: Format.id, kind: a.kind }, identifier: `${a.namespace}:${a.name}`, geometry: { cubes: a.cubes.length, bones: a.bones, ...a.kind === "prop" ? { parts: a.cubes.map((c) => ({ name: c.name, group: c.bone, from: c.from, to: c.to, pivot: c.origin, rotation: c.rotation, uv: c.faces.north.uv })) } : {} }, materials: a.kind === "prop" ? getPropMaterials() : void 0, mapping: a.mapping, rigDetection: a.kind === "prop" ? null : detectRig(a.bones), textures: a.textures.map(({ png, ...t }) => ({ ...t, pngBytes: png.length })), animations: a.animations.map((c) => ({ name: c.name, loop: c.loop, length: c.length, tracks: c.tracks.length, keyframes: c.tracks.reduce((n, t) => n + t.frames.length, 0) })), unsupported: a.unsupported };
   }
   function finish(label, aspects) {
     const entry = Undo.finishEdit(`VoxelFlow: ${label}`, aspects);
     lastEdits.set(Project, entry);
     Canvas.updateAll();
   }
-  function writePixels(texture, pixels) {
-    texture.canvas.width = 64;
-    texture.canvas.height = 16;
-    texture.width = 64;
-    texture.height = 16;
-    texture.ctx.putImageData(new ImageData(new Uint8ClampedArray(pixels), 64, 16), 0, 0);
+  function writePixels(texture, pixels, width = 64, height = 16) {
+    texture.canvas.width = width;
+    texture.canvas.height = height;
+    texture.width = width;
+    texture.height = height;
+    texture.ctx.putImageData(new ImageData(new Uint8ClampedArray(pixels), width, height), 0, 0);
     texture.convertToInternal(texture.canvas.toDataURL("image/png"));
     texture.updateSource(texture.source);
   }
@@ -21093,30 +21259,37 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
     return animations;
   }
   function createRobot(spec) {
-    const a = generateRobot(spec), validation = validateAsset(a);
-    if (!validation.ready) throw new Error("Generated plan failed validation.");
+    return createGenerated(generateRobot(spec), { kind: "humanoid" }, spec.palette);
+  }
+  function createProp(spec) {
+    return createGenerated(generateProp(spec), { kind: "prop", description: spec.description }, void 0, spec.materials);
+  }
+  function createGenerated(a, meta3, palette, propMaterials) {
+    const validation = validateAsset(a);
+    if (!validation.ready) throw new Error("Generated plan failed validation: " + validation.findings.filter((f) => f.status === "failed").map((f) => f.message).join(" "));
     const previous = typeof Project !== "undefined" && Project ? Project : void 0;
     if (!newProject(Formats.bedrock)) throw new Error("Blockbench could not create a Bedrock project.");
     const p = project();
-    p.name = spec.name;
-    p.geometry_name = `${spec.namespace}.${spec.name}`;
-    p.texture_width = 64;
-    p.texture_height = 16;
+    p.name = a.name;
+    p.geometry_name = `${a.namespace}.${a.name}`;
+    p.texture_width = a.textures[0].width;
+    p.texture_height = a.textures[0].height;
     p.box_uv = false;
-    p.voxelflow_meta = JSON.stringify({ name: spec.name, namespace: spec.namespace, version: 1 });
+    p.voxelflow_meta = JSON.stringify({ name: a.name, namespace: a.namespace, version: 2, ...meta3 });
     const elements = [], groups = [], textures = [], animations = [];
     const aspects = { elements, groups, textures, animations, outliner: true, bitmap: true, uv_mode: true };
     Undo.initEdit(aspects);
     try {
-      const texture = new Texture({ name: `${spec.name}.png` });
-      texture.voxelflow_palette = JSON.stringify(spec.palette);
+      const texture = new Texture({ name: `${a.name}.png` });
+      if (palette) texture.voxelflow_palette = JSON.stringify(palette);
+      if (propMaterials) texture.voxelflow_prop_palette = JSON.stringify(propMaterials);
       texture.add(false);
       textures.push(texture);
-      writePixels(texture, palettePixels(spec.palette));
+      writePixels(texture, propMaterials ? propAtlasPixels(propMaterials) : palettePixels(palette), p.texture_width, p.texture_height);
       const byName = /* @__PURE__ */ new Map();
       for (const b of a.bones) {
         const g = new Group({ name: b.name, origin: b.pivot, rotation: b.rotation });
-        g.voxelflow_role = b.name;
+        g.voxelflow_role = a.kind === "prop" ? "" : b.name;
         g.addTo(b.parent ? byName.get(b.parent) : "root").init();
         groups.push(g);
         byName.set(b.name, g);
@@ -21128,17 +21301,36 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
         elements.push(cube);
       }
       addAnimations(a.animations, animations);
-      finish("Create robot", aspects);
+      finish(a.kind === "prop" ? "Create prop" : "Create robot", aspects);
       texture.select();
+      const min = [0, 1, 2].map((i2) => Math.min(...a.cubes.map((c) => c.from[i2]))), max = [0, 1, 2].map((i2) => Math.max(...a.cubes.map((c) => c.to[i2]))), center = min.map((v, i2) => (v + max[i2]) / 2), span = Math.max(8, ...max.map((v, i2) => v - min[i2]));
       if (Preview.selected) {
-        Preview.selected.controls.target.set(0, spec.height / 2, 0);
-        Preview.selected.camera.position.set(spec.height * 1.1, spec.height * 0.75, -spec.height * 1.5);
+        Preview.selected.controls.target.set(...center);
+        Preview.selected.camera.position.set(center[0] + span * 1.1, center[1] + span * 0.25, center[2] - span * 1.5);
         Preview.selected.controls.update();
       }
-      return { projectId: p.uuid, cubes: elements.length, bones: groups.length, animations: animations.map((a2) => a2.name), message: "Created in a new tab. The original project is preserved." };
+      return { projectId: p.uuid, kind: a.kind ?? "humanoid", cubes: elements.length, bones: groups.length, animations: animations.map((a2) => a2.name), message: "Created in a new tab. The original project is preserved." };
     } catch (error62) {
       Undo.cancelEdit(true);
       if (previous) previous.select();
+      throw error62;
+    }
+  }
+  function applyPropMaterials(updates) {
+    requireBedrock();
+    const t = Texture.all.find((t2) => t2.voxelflow_prop_palette);
+    if (!t || !isPropProject()) throw new Error("Open a VoxelFlow prop to edit its named materials.");
+    if (t.layers_enabled || t.width !== 128 || t.height !== 16) throw new Error("The prop texture was resized or has layers. Preserve it and recolor in Paint mode.");
+    const result = recolorProp(new Uint8Array(t.ctx.getImageData(0, 0, 128, 16).data), getPropMaterials(), updates);
+    const aspects = { textures: [t], bitmap: true };
+    Undo.initEdit(aspects);
+    try {
+      writePixels(t, result.pixels, 128, 16);
+      t.voxelflow_prop_palette = JSON.stringify(result.materials);
+      finish("Recolor prop", aspects);
+      return { materials: result.materials, preservedPaintedPixels: result.preserved };
+    } catch (error62) {
+      Undo.cancelEdit(true);
       throw error62;
     }
   }
@@ -21162,6 +21354,7 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
     }
   }
   function mapRig(mapping) {
+    if (isPropProject()) throw new Error("This is a static prop. Its named groups do not need a humanoid rig.");
     const a = captureAsset(), detected = detectRig(a.bones);
     const next = mapping ?? detected.mapping;
     const check2 = validateAsset({ ...a, mapping: next }, false);
@@ -21179,6 +21372,7 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
     }
   }
   function animate(options) {
+    if (isPropProject()) throw new Error("Idle, walk and punch are humanoid presets. This prop is a static object; use the native timeline for custom animation.");
     const a = captureAsset(), validation = validateAsset(a, false);
     const failures = validation.findings.filter((f) => ["rig", "geometry"].includes(f.stage) && f.status === "failed");
     if (failures.length) throw new Error(failures[0].message);
@@ -21299,6 +21493,16 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
       switch (tool) {
         case "create_model":
           return `Create \u201C${args.spec.name}\u201D in a new Bedrock tab: ${args.spec.height} units tall, ${args.spec.build} build, ${args.spec.detail} geometry. Colors ${args.spec.palette.primary}, ${args.spec.palette.secondary}, eyes ${args.spec.palette.eyes}. Add 11 editable joints and ${args.spec.animations.clips.join(", ")} animations at ${args.spec.animations.speed}\xD7 speed and ${args.spec.animations.intensity}\xD7 intensity. Existing tabs remain open.`;
+        case "create_prop":
+          return `Create \u201C${args.spec.name}\u201D in a new Bedrock tab.
+${args.spec.description}
+
+${args.spec.parts.length} editable cubes in ${new Set(args.spec.parts.map((p) => p.group)).size} part groups. Materials: ${args.spec.materials.map((m) => `${m.name} ${m.color}`).join(", ")}.
+Parts include: ${args.spec.parts.slice(0, 12).map((p) => p.name.replaceAll("_", " ")).join(", ")}${args.spec.parts.length > 12 ? "\u2026" : ""}.
+
+A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attachable registration is a separate integration step.`;
+        case "apply_prop_materials":
+          return `Recolor prop materials: ${args.materials.map((m) => `${m.name} \u2192 ${m.color}`).join(", ")}. Preserve painted pixels and all geometry. Undo is available.`;
         case "apply_materials":
           return `Recolor the palette to ${args.palette.primary} / ${args.palette.secondary}, eyes ${args.palette.eyes}. Preserve individually painted pixels, all geometry, and animations. Undo is available.`;
         case "generate_rig":
@@ -21306,7 +21510,7 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
         case "generate_animations":
           return `Replace the current ${args.options.clips.join(", ")} preset clips with editable keyframes at ${args.options.speed}\xD7 speed and ${args.options.intensity}\xD7 intensity. Other clips stay. This replaces manual edits within the selected clips; Undo is available.`;
         case "export_asset":
-          return "Check the current scene, then choose where to save a ZIP with Bedrock geometry, the current PNG texture, animations, controllers, client entity, manifest, source model, and validation report. This is a resource asset package requiring game-side integration.";
+          return "Check the current scene, then save a ZIP with Bedrock geometry, the current PNG, client entity, render controller, manifest, source model, and validation report. Humanoid projects also include animations and their controller. Static props do not require those clips. Game-side entity or item/attachable integration is still required.";
         case "undo_last_change":
           return "Undo the latest VoxelFlow edit in the active tab. This will stop if another artist edit follows it. The exported ZIP, if any, stays on disk.";
         default:
@@ -21335,6 +21539,12 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
         switch (op.tool) {
           case "create_model":
             result = createRobot(plan.args.spec);
+            break;
+          case "create_prop":
+            result = createProp(plan.args.spec);
+            break;
+          case "apply_prop_materials":
+            result = applyPropMaterials(plan.args.materials);
             break;
           case "apply_materials":
             result = applyMaterials(plan.args.palette);
@@ -21488,7 +21698,7 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
       const root = node2("div", void 0, "vf-studio");
       this.panel.node.append(root);
       this.roots.add(root);
-      this.action = new Action("voxelflow_open", { name: "VoxelFlow Studio", description: "Create, texture, rig, animate and export a robot.", icon: "smart_toy", click: () => this.open() });
+      this.action = new Action("voxelflow_open", { name: "VoxelFlow Studio", description: "Create Minecraft props and animated robots from ChatGPT or local presets.", icon: "smart_toy", click: () => this.open() });
       MenuBar.addAction(this.action, "tools");
       workflow.onChange = () => {
         this.report = workflow.lastReport;
@@ -21506,6 +21716,8 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
     css;
     roots = /* @__PURE__ */ new Set();
     stage = 0;
+    createKind = "bag";
+    propColors = /* @__PURE__ */ new Map();
     spec = AssetSpecSchema.parse({});
     palette = { ...defaultPalette };
     speed = 1;
@@ -21518,6 +21730,7 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
     invalidate = () => {
       this.report = void 0;
       this.workflow.lastReport = void 0;
+      this.propColors.clear();
       this.refresh();
     };
     open() {
@@ -21582,17 +21795,18 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
       this.refreshing = false;
     }
     render(root) {
+      const prop = isPropProject();
       root.replaceChildren();
       const brand = node2("div", void 0, "vf-brand");
       const title = node2("div");
       title.append(node2("div", "ARTIST WORKSPACE", "vf-kicker"), node2("strong", "VoxelFlow Studio"));
-      brand.append(title, node2("span", "BEDROCK \xB7 0.1", "vf-badge"));
+      brand.append(title, node2("span", "BEDROCK \xB7 0.2", "vf-badge"));
       root.append(brand);
       const status = node2("div", void 0, "vf-status");
       status.append(node2("span", void 0, `vf-dot ${this.connection.connected ? "online" : ""}`), node2("span", this.connection.status), button(this.connection.connected ? "Disconnect" : "Connect", () => this.connection.connected ? this.connection.disconnect() : this.connectDialog(), "vf-connect"));
       root.append(status);
       const steps = node2("div", void 0, "vf-steps");
-      ["Create", "Texture", "Rig", "Animate", "Export"].forEach((text, i2) => steps.append(button(`${i2 + 1} ${text}`, () => {
+      ["Create", "Texture", prop ? "Parts" : "Rig", "Animate", "Export"].forEach((text, i2) => steps.append(button(`${i2 + 1} ${text}`, () => {
         this.stage = i2;
         this.message = "";
         this.refresh();
@@ -21601,48 +21815,80 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
       const content = node2("div", void 0, "vf-card");
       root.append(content);
       if (this.stage === 0) {
-        content.append(node2("h3", "Meet your next character."), node2("p", "Start with Atlas, an articulated robot. Every cube, joint and keyframe stays editable.", "vf-muted"));
-        content.append(this.field("Character name", this.spec.name, (v) => this.spec.name = v));
-        content.append(this.row(this.field("Height \xB7 pixels", this.spec.height, (v) => this.spec.height = Number(v), "number", 16, 64), this.select("Build", this.spec.build, ["balanced", "slender", "heavy"], (v) => this.spec.build = v)));
-        content.append(this.select("Geometry detail", this.spec.detail, ["simple", "detailed"], (v) => this.spec.detail = v));
-        content.append(this.row(this.field("Armor", this.spec.palette.primary, (v) => this.spec.palette.primary = v, "color"), this.field("Trim", this.spec.palette.secondary, (v) => this.spec.palette.secondary = v, "color"), this.field("Eyes", this.spec.palette.eyes, (v) => this.spec.palette.eyes = v, "color")));
-        content.append(button("Review robot plan", () => {
-          this.palette = { ...this.spec.palette };
-          this.propose("create_model", { spec: this.spec });
-        }, "vf-primary"));
-        content.append(node2("p", "Includes texture + 11 joints + idle, walk and punch. Opens a fresh tab.", "vf-mini"));
-        const details = node2("details");
-        details.append(node2("summary", "Bring your own model / use AI"));
-        const help = node2("div", void 0, "vf-muted");
-        help.textContent = "Open a .bbmodel with File \u2192 Open Model. VoxelFlow can map an existing humanoid with separate upper/lower limbs. For natural language, connect Codex or an MCP host and describe the character there. Quadrupeds, arbitrary mesh rigging, and image generation are not available in this release.";
-        details.append(help);
-        content.append(details);
+        content.append(node2("h3", "Describe it in ChatGPT."), node2("p", "A leather bag. A crystal staff. A lantern, sword, chest, or your own idea. Your connected assistant designs the parts; you review the plan here.", "vf-muted"));
+        content.append(node2("p", "Try: \u201CUse VoxelFlow to make a brown leather backpack with gold buckles and a front pocket.\u201D", "vf-mini"));
+        content.append(this.select("Or start with an offline example", this.createKind, ["bag", "staff", "robot"], (v) => {
+          this.createKind = v;
+          this.refresh();
+        }));
+        if (this.createKind !== "robot") {
+          const preset = propPreset(this.createKind);
+          content.append(node2("p", preset.description, "vf-muted"), node2("p", `${preset.parts.length} editable parts \xB7 ${preset.materials.length} named colors \xB7 PNG + UVs`, "vf-mini"), button(`Review ${this.createKind} plan`, () => this.propose("create_prop", { spec: preset }), "vf-primary"));
+          content.append(node2("p", "These are examples. ChatGPT can compose other objects from up to 128 cubes and 16 colors. No text interpretation runs inside this panel.", "vf-mini"));
+        } else {
+          content.append(node2("h3", "Meet your next character."), node2("p", "Start with Atlas, an articulated robot. Every cube, joint and keyframe stays editable.", "vf-muted"));
+          content.append(this.field("Character name", this.spec.name, (v) => this.spec.name = v));
+          content.append(this.row(this.field("Height \xB7 pixels", this.spec.height, (v) => this.spec.height = Number(v), "number", 16, 64), this.select("Build", this.spec.build, ["balanced", "slender", "heavy"], (v) => this.spec.build = v)));
+          content.append(this.select("Geometry detail", this.spec.detail, ["simple", "detailed"], (v) => this.spec.detail = v));
+          content.append(this.row(this.field("Armor", this.spec.palette.primary, (v) => this.spec.palette.primary = v, "color"), this.field("Trim", this.spec.palette.secondary, (v) => this.spec.palette.secondary = v, "color"), this.field("Eyes", this.spec.palette.eyes, (v) => this.spec.palette.eyes = v, "color")));
+          content.append(button("Review robot plan", () => {
+            this.palette = { ...this.spec.palette };
+            this.propose("create_model", { spec: this.spec });
+          }, "vf-primary"));
+          content.append(node2("p", "Includes texture + 11 joints + idle, walk and punch. Opens a fresh tab.", "vf-mini"));
+          const details = node2("details");
+          details.append(node2("summary", "Bring your own model / use AI"));
+          const help = node2("div", void 0, "vf-muted");
+          help.textContent = "Open a .bbmodel with File \u2192 Open Model. VoxelFlow can map an existing humanoid with separate upper/lower limbs. For natural language, connect Codex or an MCP host and describe the character there. Quadrupeds, arbitrary mesh rigging, and image generation are not available in this release.";
+          details.append(help);
+          content.append(details);
+        }
       } else if (this.stage === 1) {
         content.append(node2("h3", "Make it yours."), node2("p", "Change the generated colors without rebuilding. Individually painted pixels are preserved.", "vf-muted"));
-        content.append(this.row(this.field("Armor", this.palette.primary, (v) => this.palette.primary = v, "color"), this.field("Trim", this.palette.secondary, (v) => this.palette.secondary = v, "color"), this.field("Eyes", this.palette.eyes, (v) => this.palette.eyes = v, "color")));
-        if (typeof Project !== "undefined" && Project && Texture.all[0]) {
-          const img = node2("img", void 0, "vf-texture");
-          img.src = Texture.all[0].getDataURL();
-          img.alt = "Current editable palette texture";
-          content.append(img);
+        if (prop) {
+          const materials = getPropMaterials();
+          for (const m of materials) {
+            const key = `${Project.uuid}:${m.name}`;
+            content.append(this.field(m.name.replaceAll("_", " "), this.propColors.get(key) ?? m.color, (v) => this.propColors.set(key, v), "color"));
+          }
+          content.append(button("Review material colors", () => this.propose("apply_prop_materials", { materials: materials.map((m) => ({ ...m, color: this.propColors.get(`${Project.uuid}:${m.name}`) ?? m.color })) }), "vf-primary"), button("Open Paint mode", () => this.guard(() => Modes.options.paint.select()), "vf-secondary"));
+        } else {
+          content.append(this.row(this.field("Armor", this.palette.primary, (v) => this.palette.primary = v, "color"), this.field("Trim", this.palette.secondary, (v) => this.palette.secondary = v, "color"), this.field("Eyes", this.palette.eyes, (v) => this.palette.eyes = v, "color")));
+          if (typeof Project !== "undefined" && Project && Texture.all[0]) {
+            const img = node2("img", void 0, "vf-texture");
+            img.src = Texture.all[0].getDataURL();
+            img.alt = "Current editable palette texture";
+            content.append(img);
+          }
+          content.append(button("Review color change", () => this.propose("apply_materials", { palette: this.palette }), "vf-primary"), button("Open Paint mode", () => this.guard(() => Modes.options.paint.select()), "vf-secondary"));
+          content.append(node2("p", "The eyes use bright pixels. An emissive shader is not part of this export.", "vf-mini"));
         }
-        content.append(button("Review color change", () => this.propose("apply_materials", { palette: this.palette }), "vf-primary"), button("Open Paint mode", () => this.guard(() => Modes.options.paint.select()), "vf-secondary"));
-        content.append(node2("p", "The eyes use bright pixels. An emissive shader is not part of this export.", "vf-mini"));
       } else if (this.stage === 2) {
-        content.append(node2("h3", "Give every part a joint."), node2("p", "Generated robots arrive connected. For imported humanoids, match body parts to existing groups, then check their joint positions.", "vf-muted"));
-        content.append(button("Review detected rig", () => this.propose("generate_rig"), "vf-primary"), button("Map body parts\u2026", () => this.mappingDialog(), "vf-secondary"), button("Check joints", () => this.validate(), "vf-secondary"));
-        content.append(node2("p", "Shoulder \u2192 upper arm \u2192 elbow \u2192 lower arm. Hip \u2192 thigh \u2192 knee \u2192 shin. Left means the character\u2019s own left.", "vf-mini"));
+        if (prop) {
+          content.append(node2("h3", "Every part stays editable."), node2("p", "This object uses named groups in the Outliner. Edit the straps, handle, crystal, or other parts directly. A static prop does not need arms, legs, or a humanoid skeleton.", "vf-muted"), button("Check object structure", () => this.validate(), "vf-primary"));
+        } else {
+          content.append(node2("h3", "Give every part a joint."), node2("p", "Generated robots arrive connected. For imported humanoids, match body parts to existing groups, then check their joint positions.", "vf-muted"));
+          content.append(button("Review detected rig", () => this.propose("generate_rig"), "vf-primary"), button("Map body parts\u2026", () => this.mappingDialog(), "vf-secondary"), button("Check joints", () => this.validate(), "vf-secondary"));
+          content.append(node2("p", "Shoulder \u2192 upper arm \u2192 elbow \u2192 lower arm. Hip \u2192 thigh \u2192 knee \u2192 shin. Left means the character\u2019s own left.", "vf-mini"));
+        }
       } else if (this.stage === 3) {
-        content.append(node2("h3", "Put character in motion."), node2("p", "Preview native animations. Adjust timing and strength, then review before replacing the three preset clips.", "vf-muted"));
-        for (const [clip, label] of [["idle", "Idle \xB7 breathing"], ["walk", "Walk \xB7 alternating gait"], ["attack", "Punch \xB7 windup & recovery"]]) content.append(button(`\u25B6  ${label}`, () => void this.run("preview_animation", { clip, playing: true }), "vf-secondary"));
-        content.append(button("Stop playback", () => {
-          Timeline.pause();
-        }, "vf-secondary"));
-        content.append(this.row(this.field("Speed \xB7 0.25\u20133\xD7", this.speed, (v) => this.speed = Number(v), "number", 0.25, 3), this.field("Strength \xB7 0.1\u20131.5\xD7", this.intensity, (v) => this.intensity = Number(v), "number", 0.1, 1.5)));
-        content.append(button("Review animation update", () => this.propose("generate_animations", { options: { clips: ["idle", "walk", "attack"], speed: this.speed, intensity: this.intensity } }), "vf-primary"));
+        if (prop) {
+          content.append(node2("h3", "A static Minecraft prop."), node2("p", "Idle, walk, and punch are character presets. This object is ready for static export without those animations. Custom prop animation can be authored in Blockbench and exported with its native tools.", "vf-muted"), button("Check export readiness", () => {
+            this.stage = 4;
+            this.validate();
+          }, "vf-primary"));
+        } else {
+          content.append(node2("h3", "Put character in motion."), node2("p", "Preview native animations. Adjust timing and strength, then review before replacing the three preset clips.", "vf-muted"));
+          for (const [clip, label] of [["idle", "Idle \xB7 breathing"], ["walk", "Walk \xB7 alternating gait"], ["attack", "Punch \xB7 windup & recovery"]]) content.append(button(`\u25B6  ${label}`, () => void this.run("preview_animation", { clip, playing: true }), "vf-secondary"));
+          content.append(button("Stop playback", () => {
+            Timeline.pause();
+          }, "vf-secondary"));
+          content.append(this.row(this.field("Speed \xB7 0.25\u20133\xD7", this.speed, (v) => this.speed = Number(v), "number", 0.25, 3), this.field("Strength \xB7 0.1\u20131.5\xD7", this.intensity, (v) => this.intensity = Number(v), "number", 0.1, 1.5)));
+          content.append(button("Review animation update", () => this.propose("generate_animations", { options: { clips: ["idle", "walk", "attack"], speed: this.speed, intensity: this.intensity } }), "vf-primary"));
+        }
       } else {
         content.append(node2("h3", "Ready for the next stage."), node2("p", "Check the live scene, then save an organized Bedrock resource asset package.", "vf-muted"), button("Run quality checks", () => this.validate(), "vf-secondary"), button("Review Bedrock export", () => this.propose("export_asset", { target: "bedrock" }), "vf-primary"));
-        content.append(node2("p", "Includes geometry, PNG, animations, controllers, client entity, manifest and editable source. Requires a matching behavior entity. Minecraft runtime is unverified.", "vf-mini"));
+        content.append(node2("p", prop ? "Includes geometry, PNG, static client entity, render controller, manifest and editable source. Held/worn items still need item and attachable definitions. Minecraft runtime is unverified." : "Includes geometry, PNG, animations, controllers, client entity, manifest and editable source. Requires a matching behavior entity. Minecraft runtime is unverified.", "vf-mini"));
       }
       if (this.workflow.busy) root.append(node2("div", "Applying approved change\u2026", "vf-error"));
       if (this.message) root.append(node2("div", this.message, "vf-error"));
@@ -21746,9 +21992,9 @@ Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verifie
   BBPlugin.register("voxelflow_studio", {
     title: "VoxelFlow Studio",
     author: "VoxelFlow Studio contributors",
-    description: "An artist-first robot pipeline: editable models, pixel palettes, humanoid joints, native animations, quality checks and Bedrock exports. Optional local MCP connection.",
+    description: "Prompt-designed Minecraft props and animated robots: editable geometry, named materials, quality checks and Bedrock exports. Connect ChatGPT/Codex through MCP or use offline examples.",
     icon: "smart_toy",
-    version: "0.1.0",
+    version: "0.2.0",
     min_version: "5.2.0",
     variant: "desktop",
     tags: ["Minecraft: Bedrock Edition", "Animation", "Utility"],

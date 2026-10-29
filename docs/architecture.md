@@ -18,7 +18,9 @@ Codex / Inspector / authorized tunnel → MCP stdio server
                                  real project / Save dialog
 ```
 
-The diagram's panel feeds the same Workflow directly; the bridge is optional for offline artist controls. `packages/core/src` contains deterministic schemas, geometry, texture encoding, rig detection, clips, validation, export, and operation state transitions. `packages/blockbench-plugin/src/editor` adapts those data to installed editor APIs. The UI uses native Panel/Dialog controls and Blockbench theme variables. `packages/mcp-server` exposes 12 SDK tools and a guided prompt; it never generates model geometry itself.
+The diagram's panel feeds the same Workflow directly; the bridge is optional for offline artist controls. `packages/core/src` contains deterministic schemas, geometry, texture encoding, rig detection, clips, validation, export, and operation state transitions. `packages/blockbench-plugin/src/editor` adapts those data to installed editor APIs. The UI uses native Panel/Dialog controls and Blockbench theme variables. `packages/mcp-server` exposes 14 SDK tools and two guided prompts. The connected assistant designs general prop blueprints; the deterministic core converts validated cubes and materials into real geometry and a PNG atlas.
+
+Prop metadata persists in the native project and texture. Static props bypass humanoid mapping and required character clips, while retaining geometry, hierarchy, texture, UV, and package checks. Their exports omit animation references. Generic props are bounded to 128 cubes, 16 materials, and 32 groups. Bag and Staff are examples using this same contract, not category restrictions.
 
 ## Approval and transactions
 

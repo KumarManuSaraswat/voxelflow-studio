@@ -1,4 +1,5 @@
-import { Asset, AssetSpec, Clip, CubeData, FaceName, faces, Palette, RigMapping, Role, roles, V3 } from '../../../core/src/schema';
+import { Asset, AssetSpec, Clip, CubeData, FaceName, faces, Palette, PropMaterial, PropMaterialsSchema, PropSpec, RigMapping, Role, roles, V3 } from '../../../core/src/schema';
+import {generateProp,propAtlasPixels,recolorProp} from '../../../core/src/props';
 import { detectRig, generateRobot } from '../../../core/src/modeling';
 import { generateAnimations } from '../../../core/src/animation';
 import { validateAsset } from '../../../core/src/validation';
@@ -6,17 +7,19 @@ import { exportPackage, validatePackage, zipPackage } from '../../../core/src/ex
 import { encodePng, fromBase64, palettePixels, recolorPreservingPaint, toBase64 } from '../../../core/src/textures';
 
 type VFGroup = Group & { voxelflow_role:string };
-type VFTexture = Texture & { voxelflow_palette:string };
+type VFTexture = Texture & { voxelflow_palette:string; voxelflow_prop_palette:string };
 type VFProject = ModelProject & { voxelflow_meta:string };
 const lastEdits=new WeakMap<ModelProject,UndoEntry>();
 const vector=(v:number[]):V3=>[v[0],v[1],v[2]];
 function project() { if(typeof Project==='undefined'||!Project)throw new Error('Open a model or create a robot first.');return Project as VFProject; }
 export function requireBedrock() {const p=project();if(Format.id!=='bedrock')throw new Error('Use a Bedrock Entity project. Create a new robot, or convert a copy of the imported model using File → Convert Project.');return p;}
-function identity(){ const p=project();let meta:{name?:string;namespace?:string}={};try{meta=JSON.parse(p.voxelflow_meta||'{}');}catch{}return {name:meta.name||p.name.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/^[^a-z]+/,'')||'imported_robot',namespace:meta.namespace||'voxelflow'}; }
-export function initializeProperties() {return [new Property(ModelProject,'string','voxelflow_meta',{default:''}),new Property(Group,'string','voxelflow_role',{default:''}),new Property(Texture,'string','voxelflow_palette',{default:''})];}
+function identity(){ const p=project();let meta:{name?:string;namespace?:string;kind?:string}={};try{meta=JSON.parse(p.voxelflow_meta||'{}');}catch{}return {name:meta.name||p.name.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/^[^a-z]+/,'')||'imported_model',namespace:meta.namespace||'voxelflow',kind:meta.kind==='prop'?'prop' as const:'humanoid' as const}; }
+export function isPropProject(){return typeof Project!=='undefined'&&!!Project&&identity().kind==='prop';}
+export function getPropMaterials():PropMaterial[]{const t=Texture.all.find(t=>(t as VFTexture).voxelflow_prop_palette) as VFTexture|undefined;if(!t)return [];try{return PropMaterialsSchema.parse(JSON.parse(t.voxelflow_prop_palette));}catch{return [];}}
+export function initializeProperties() {return [new Property(ModelProject,'string','voxelflow_meta',{default:''}),new Property(Group,'string','voxelflow_role',{default:''}),new Property(Texture,'string','voxelflow_palette',{default:''}),new Property(Texture,'string','voxelflow_prop_palette',{default:''})];}
 export function editorStatus() {
   const p=typeof Project!=='undefined'&&Project?Project:undefined;
-  return {connected:true,blockbenchVersion:Blockbench.version,project:p?{id:p.uuid,name:p.name,format:Format.id}:null,supported:{templates:['robot'],targets:['bedrock'],animations:['idle','walk','attack'],approvalRequired:true},undoAvailable:p?Undo.history[Undo.index-1]===lastEdits.get(p):false};
+  return {connected:true,blockbenchVersion:Blockbench.version,project:p?{id:p.uuid,name:p.name,format:Format.id,kind:identity().kind}:null,supported:{templates:['robot','bag','staff'],customProps:{tool:'create_prop',maxParts:128,maxMaterials:16,promptLocation:'ChatGPT or Codex'},targets:['bedrock'],animations:['idle','walk','attack'],approvalRequired:true},undoAvailable:p?Undo.history[Undo.index-1]===lastEdits.get(p):false};
 }
 export function sceneStamp() {
   if(typeof Project==='undefined'||!Project)return 'no-project';
@@ -80,12 +83,12 @@ export function captureAsset():Asset {
 export function inspectProject() {
   if(typeof Project==='undefined'||!Project)return {project:null,message:'Create a robot to begin.'};
   const a=captureAsset();
-  return {project:{id:Project.uuid,name:Project.name,format:Format.id},identifier:`${a.namespace}:${a.name}`,geometry:{cubes:a.cubes.length,bones:a.bones},mapping:a.mapping,rigDetection:detectRig(a.bones),textures:a.textures.map(({png,...t})=>({...t,pngBytes:png.length})),animations:a.animations.map(c=>({name:c.name,loop:c.loop,length:c.length,tracks:c.tracks.length,keyframes:c.tracks.reduce((n,t)=>n+t.frames.length,0)})),unsupported:a.unsupported};
+  return {project:{id:Project.uuid,name:Project.name,format:Format.id,kind:a.kind},identifier:`${a.namespace}:${a.name}`,geometry:{cubes:a.cubes.length,bones:a.bones,...(a.kind==='prop'?{parts:a.cubes.map(c=>({name:c.name,group:c.bone,from:c.from,to:c.to,pivot:c.origin,rotation:c.rotation,uv:c.faces.north.uv}))}:{})},materials:a.kind==='prop'?getPropMaterials():undefined,mapping:a.mapping,rigDetection:a.kind==='prop'?null:detectRig(a.bones),textures:a.textures.map(({png,...t})=>({...t,pngBytes:png.length})),animations:a.animations.map(c=>({name:c.name,loop:c.loop,length:c.length,tracks:c.tracks.length,keyframes:c.tracks.reduce((n,t)=>n+t.frames.length,0)})),unsupported:a.unsupported};
 }
 function finish(label:string,aspects:UndoAspects){const entry=Undo.finishEdit(`VoxelFlow: ${label}`,aspects);lastEdits.set(Project,entry);Canvas.updateAll();}
-function writePixels(texture:VFTexture,pixels:Uint8Array) {
-  texture.canvas.width=64;texture.canvas.height=16;texture.width=64;texture.height=16;
-  texture.ctx.putImageData(new ImageData(new Uint8ClampedArray(pixels),64,16),0,0);
+function writePixels(texture:VFTexture,pixels:Uint8Array,width=64,height=16) {
+  texture.canvas.width=width;texture.canvas.height=height;texture.width=width;texture.height=height;
+  texture.ctx.putImageData(new ImageData(new Uint8ClampedArray(pixels),width,height),0,0);
   texture.convertToInternal(texture.canvas.toDataURL('image/png')); texture.updateSource(texture.source);
 }
 function addAnimations(clips:Clip[],undoTracked:BBAnimation[],existing=new Map<string,BBAnimation>()) {
@@ -109,22 +112,38 @@ function addAnimations(clips:Clip[],undoTracked:BBAnimation[],existing=new Map<s
   return animations;
 }
 export function createRobot(spec:AssetSpec) {
-  const a=generateRobot(spec), validation=validateAsset(a);if(!validation.ready)throw new Error('Generated plan failed validation.');
+  return createGenerated(generateRobot(spec),{kind:'humanoid'},spec.palette);
+}
+export function createProp(spec:PropSpec){return createGenerated(generateProp(spec),{kind:'prop',description:spec.description},undefined,spec.materials);}
+function createGenerated(a:Asset,meta:Record<string,unknown>,palette?:Palette,propMaterials?:PropMaterial[]){
+  const validation=validateAsset(a);if(!validation.ready)throw new Error('Generated plan failed validation: '+validation.findings.filter(f=>f.status==='failed').map(f=>f.message).join(' '));
   const previous=typeof Project!=='undefined'&&Project?Project:undefined;
   if(!newProject(Formats.bedrock))throw new Error('Blockbench could not create a Bedrock project.');
-  const p=project();p.name=spec.name;p.geometry_name=`${spec.namespace}.${spec.name}`;p.texture_width=64;p.texture_height=16;p.box_uv=false;p.voxelflow_meta=JSON.stringify({name:spec.name,namespace:spec.namespace,version:1});
+  const p=project();p.name=a.name;p.geometry_name=`${a.namespace}.${a.name}`;p.texture_width=a.textures[0].width;p.texture_height=a.textures[0].height;p.box_uv=false;p.voxelflow_meta=JSON.stringify({name:a.name,namespace:a.namespace,version:2,...meta});
   const elements:Cube[]=[],groups:Group[]=[],textures:Texture[]=[],animations:BBAnimation[]=[];
   const aspects={elements,groups,textures,animations,outliner:true,bitmap:true,uv_mode:true};
   Undo.initEdit(aspects);
   try {
-    const texture=new Texture({name:`${spec.name}.png`}) as VFTexture;texture.voxelflow_palette=JSON.stringify(spec.palette);texture.add(false);textures.push(texture);writePixels(texture,palettePixels(spec.palette));
+    const texture=new Texture({name:`${a.name}.png`}) as VFTexture;
+    if(palette)texture.voxelflow_palette=JSON.stringify(palette);
+    if(propMaterials)texture.voxelflow_prop_palette=JSON.stringify(propMaterials);
+    texture.add(false);textures.push(texture);writePixels(texture,propMaterials?propAtlasPixels(propMaterials):palettePixels(palette!),p.texture_width,p.texture_height);
     const byName=new Map<string,Group>();
-    for(const b of a.bones){const g=new Group({name:b.name,origin:b.pivot,rotation:b.rotation}) as VFGroup;g.voxelflow_role=b.name;g.addTo(b.parent?byName.get(b.parent)!:'root').init();groups.push(g);byName.set(b.name,g);}
+    for(const b of a.bones){const g=new Group({name:b.name,origin:b.pivot,rotation:b.rotation}) as VFGroup;g.voxelflow_role=a.kind==='prop'?'':b.name;g.addTo(b.parent?byName.get(b.parent)!:'root').init();groups.push(g);byName.set(b.name,g);}
     for(const c of a.cubes){const cube=new Cube({name:c.name,from:c.from,to:c.to,origin:c.origin,rotation:c.rotation,box_uv:false,autouv:0});for(const side of faces)cube.faces[side].extend({...c.faces[side],texture:texture.uuid});cube.addTo(byName.get(c.bone)!).init();elements.push(cube);}
-    addAnimations(a.animations,animations);finish('Create robot',aspects);texture.select();
-    if(Preview.selected){Preview.selected.controls.target.set(0,spec.height/2,0);Preview.selected.camera.position.set(spec.height*1.1,spec.height*0.75,-spec.height*1.5);Preview.selected.controls.update();}
-    return {projectId:p.uuid,cubes:elements.length,bones:groups.length,animations:animations.map(a=>a.name),message:'Created in a new tab. The original project is preserved.'};
+    addAnimations(a.animations,animations);finish(a.kind==='prop'?'Create prop':'Create robot',aspects);texture.select();
+    const min=[0,1,2].map(i=>Math.min(...a.cubes.map(c=>c.from[i]))),max=[0,1,2].map(i=>Math.max(...a.cubes.map(c=>c.to[i]))),center=min.map((v,i)=>(v+max[i])/2),span=Math.max(8,...max.map((v,i)=>v-min[i]));
+    if(Preview.selected){Preview.selected.controls.target.set(...center as V3);Preview.selected.camera.position.set(center[0]+span*1.1,center[1]+span*.25,center[2]-span*1.5);Preview.selected.controls.update();}
+    return {projectId:p.uuid,kind:a.kind??'humanoid',cubes:elements.length,bones:groups.length,animations:animations.map(a=>a.name),message:'Created in a new tab. The original project is preserved.'};
   }catch(error){Undo.cancelEdit(true);if(previous)previous.select();throw error;}
+}
+export function applyPropMaterials(updates:PropMaterial[]){
+  requireBedrock();const t=Texture.all.find(t=>(t as VFTexture).voxelflow_prop_palette) as VFTexture|undefined;
+  if(!t||!isPropProject())throw new Error('Open a VoxelFlow prop to edit its named materials.');
+  if(t.layers_enabled||t.width!==128||t.height!==16)throw new Error('The prop texture was resized or has layers. Preserve it and recolor in Paint mode.');
+  const result=recolorProp(new Uint8Array(t.ctx.getImageData(0,0,128,16).data),getPropMaterials(),updates);
+  const aspects={textures:[t],bitmap:true};Undo.initEdit(aspects);
+  try{writePixels(t,result.pixels,128,16);t.voxelflow_prop_palette=JSON.stringify(result.materials);finish('Recolor prop',aspects);return {materials:result.materials,preservedPaintedPixels:result.preserved};}catch(error){Undo.cancelEdit(true);throw error;}
 }
 export function applyMaterials(palette:Palette) {
   requireBedrock();const t=Texture.all.find(t=>(t as VFTexture).voxelflow_palette) as VFTexture|undefined;
@@ -135,6 +154,7 @@ export function applyMaterials(palette:Palette) {
   try{writePixels(t,result.pixels);t.voxelflow_palette=JSON.stringify(palette);finish('Recolor palette',aspects);return {preservedPaintedPixels:result.preserved,changedTexture:t.name};}catch(error){Undo.cancelEdit(true);throw error;}
 }
 export function mapRig(mapping?:RigMapping) {
+  if(isPropProject())throw new Error('This is a static prop. Its named groups do not need a humanoid rig.');
   const a=captureAsset(), detected=detectRig(a.bones);const next=mapping??detected.mapping;
   const check=validateAsset({...a,mapping:next},false);const errors=check.findings.filter(f=>f.stage==='rig'&&f.status==='failed');
   if(errors.length)throw new Error(errors.map(f=>f.message).join(' ')+' Use Map body parts, then adjust the imported joints if needed.');
@@ -142,6 +162,7 @@ export function mapRig(mapping?:RigMapping) {
   try {for(const g of Group.all as VFGroup[])g.voxelflow_role=roles.find(r=>next[r]===g.name)??'';finish('Map humanoid rig',aspects);return {mapping:next,findings:check.findings.filter(f=>f.stage==='rig')};}catch(error){Undo.cancelEdit(true);throw error;}
 }
 export function animate(options:unknown) {
+  if(isPropProject())throw new Error('Idle, walk and punch are humanoid presets. This prop is a static object; use the native timeline for custom animation.');
   const a=captureAsset(), validation=validateAsset(a,false);const failures=validation.findings.filter(f=>['rig','geometry'].includes(f.stage)&&f.status==='failed');
   if(failures.length)throw new Error(failures[0].message);
   const clips=generateAnimations(a.name,a.namespace,a.mapping as RigMapping,options),names=new Set(clips.map(c=>c.name));

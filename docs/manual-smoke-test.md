@@ -4,6 +4,10 @@ Use an isolated test project. Install `dist/voxelflow_studio.js` in Blockbench d
 
 - [ ] Load plugin through File → Plugins → Load Plugin from File. Confirm Tools → VoxelFlow Studio and five stages. Unload/reload without duplicate panels or listeners.
 - [ ] Without a connection, create a preset, review its summary, and cancel. Confirm no tab or geometry was created.
+- [ ] Create Bag (28 cubes, 8 groups) and Staff (16 cubes, 6 groups), each with a 128×16 atlas. Check pocket/straps/buckles and staff crown/grip. Quality checks must not require humanoid roles or clips.
+- [ ] Submit a newly designed object through `create_prop` with named materials and cube parts. Confirm it does not require a preset category. Invalid dimensions/material references must fail before approval.
+- [ ] Use `apply_prop_materials` to change one named color. Check geometry remains, painted pixels survive, and native Undo restores the texture and palette. Save/reopen `.bbmodel` and confirm prop metadata persists.
+- [ ] Export a prop: eight live files, including native source, with no dangling animation/controller references. Item/attachable gameplay setup remains separate.
 - [ ] Create a tall slender detailed robot and approve. Confirm a new tab, 43 cubes, 11 bones, one 64×16 texture, three native clips, and all prior tabs preserved.
 - [ ] Open Paint mode, paint a distinctive pixel, then recolor through Texture. Confirm that pixel survives and unpainted swatches change. Native Undo should restore the previous atlas and metadata.
 - [ ] Inspect root → torso → head/arms and root → upper legs → lower legs. Rotate an elbow and knee with native controls, then Undo. Geometry should rotate around the joint without detaching.

@@ -1,0 +1,349 @@
+{
+  "name": "arcane_staff",
+  "namespace": "voxelflow",
+  "description": "Wooden wizard staff with a wrapped grip, gold fittings, forked crown, and violet crystal.",
+  "materials": [
+    {
+      "name": "wood",
+      "color": "#62402b"
+    },
+    {
+      "name": "leather",
+      "color": "#302e42"
+    },
+    {
+      "name": "gold",
+      "color": "#e3b34e"
+    },
+    {
+      "name": "crystal",
+      "color": "#9e64ee"
+    },
+    {
+      "name": "highlight",
+      "color": "#e4ceff"
+    }
+  ],
+  "parts": [
+    {
+      "name": "wooden_shaft",
+      "group": "shaft",
+      "from": [
+        -0.8,
+        1,
+        -0.8
+      ],
+      "to": [
+        0.8,
+        30,
+        0.8
+      ],
+      "material": "wood",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "bottom_cap",
+      "group": "fittings",
+      "from": [
+        -1.1,
+        0,
+        -1.1
+      ],
+      "to": [
+        1.1,
+        2,
+        1.1
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "grip",
+      "group": "grip",
+      "from": [
+        -1.05,
+        10,
+        -1.05
+      ],
+      "to": [
+        1.05,
+        18,
+        1.05
+      ],
+      "material": "leather",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "grip_wrap_0",
+      "group": "grip",
+      "from": [
+        -1.18,
+        10.5,
+        -1.18
+      ],
+      "to": [
+        1.18,
+        11.1,
+        1.18
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "grip_wrap_1",
+      "group": "grip",
+      "from": [
+        -1.18,
+        12.3,
+        -1.18
+      ],
+      "to": [
+        1.18,
+        12.9,
+        1.18
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "grip_wrap_2",
+      "group": "grip",
+      "from": [
+        -1.18,
+        14.1,
+        -1.18
+      ],
+      "to": [
+        1.18,
+        14.7,
+        1.18
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "grip_wrap_3",
+      "group": "grip",
+      "from": [
+        -1.18,
+        15.9,
+        -1.18
+      ],
+      "to": [
+        1.18,
+        16.5,
+        1.18
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "upper_collar",
+      "group": "fittings",
+      "from": [
+        -1.35,
+        26,
+        -1.35
+      ],
+      "to": [
+        1.35,
+        28,
+        1.35
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "crystal_socket",
+      "group": "crown",
+      "from": [
+        -2.4,
+        29,
+        -1.7
+      ],
+      "to": [
+        2.4,
+        31,
+        1.7
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_prong",
+      "group": "crown",
+      "from": [
+        -4,
+        29,
+        -0.65
+      ],
+      "to": [
+        -2.8,
+        35,
+        0.65
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        -20
+      ]
+    },
+    {
+      "name": "right_prong",
+      "group": "crown",
+      "from": [
+        2.8,
+        29,
+        -0.65
+      ],
+      "to": [
+        4,
+        35,
+        0.65
+      ],
+      "material": "gold",
+      "rotation": [
+        0,
+        0,
+        20
+      ]
+    },
+    {
+      "name": "crystal_core",
+      "group": "crystal",
+      "from": [
+        -2.1,
+        31,
+        -2.1
+      ],
+      "to": [
+        2.1,
+        37,
+        2.1
+      ],
+      "material": "crystal",
+      "rotation": [
+        0,
+        45,
+        0
+      ]
+    },
+    {
+      "name": "crystal_tip",
+      "group": "crystal",
+      "from": [
+        -1.3,
+        36,
+        -1.3
+      ],
+      "to": [
+        1.3,
+        40,
+        1.3
+      ],
+      "material": "crystal",
+      "rotation": [
+        0,
+        45,
+        0
+      ]
+    },
+    {
+      "name": "crystal_glint",
+      "group": "crystal",
+      "from": [
+        -0.45,
+        32,
+        -3.05
+      ],
+      "to": [
+        0.45,
+        36,
+        -2.7
+      ],
+      "material": "highlight",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left_rune",
+      "group": "fittings",
+      "from": [
+        -1.6,
+        22,
+        -1.4
+      ],
+      "to": [
+        -0.6,
+        24,
+        -0.9
+      ],
+      "material": "crystal",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right_rune",
+      "group": "fittings",
+      "from": [
+        0.6,
+        22,
+        -1.4
+      ],
+      "to": [
+        1.6,
+        24,
+        -0.9
+      ],
+      "material": "crystal",
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

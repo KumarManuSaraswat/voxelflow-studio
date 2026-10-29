@@ -1,7 +1,8 @@
 import { AssetSpecSchema, defaultPalette, Operation, Palette, RigMapping, roles, ValidationReport } from '../../../core/src/schema';
 import { detectRig } from '../../../core/src/modeling';
 import { validateAsset } from '../../../core/src/validation';
-import { captureAsset } from '../editor/adapter';
+import { captureAsset, getPropMaterials, isPropProject } from '../editor/adapter';
+import {propPreset} from '../../../core/src/props';
 import { Workflow } from '../editor/workflow';
 import { Connection } from '../bridge/connection';
 
@@ -13,6 +14,8 @@ export class Studio {
   css:{delete():void};
   roots=new Set<HTMLElement>();
   stage=0;
+  createKind:'bag'|'staff'|'robot'='bag';
+  propColors=new Map<string,string>();
   spec=AssetSpecSchema.parse({});
   palette:Palette={...defaultPalette};
   speed=1;intensity=1;
@@ -21,7 +24,7 @@ export class Studio {
   welcome?:Dialog;
   approval?:Dialog;
   refreshing=false;
-  invalidate=()=>{this.report=undefined;this.workflow.lastReport=undefined;this.refresh();};
+  invalidate=()=>{this.report=undefined;this.workflow.lastReport=undefined;this.propColors.clear();this.refresh();};
   constructor(public workflow:Workflow,public connection:Connection){
     this.css=Blockbench.addCSS(`
       .vf-studio{padding:12px;display:flex;flex-direction:column;gap:12px;color:var(--color-text);font-size:13px;line-height:1.45;overflow-y:auto;max-height:100%;box-sizing:border-box}
@@ -37,7 +40,7 @@ export class Studio {
     `);
     this.panel=new Panel('voxelflow_studio',{name:'VoxelFlow Studio',icon:'smart_toy',growable:false,resizable:true,min_height:360,default_position:{slot:'left_bar',height:620,fixed_height:true,sidebar_index:0},condition:()=>true});
     const root=node('div',undefined,'vf-studio');this.panel.node.append(root);this.roots.add(root);
-    this.action=new Action('voxelflow_open',{name:'VoxelFlow Studio',description:'Create, texture, rig, animate and export a robot.',icon:'smart_toy',click:()=>this.open()});MenuBar.addAction(this.action,'tools');
+    this.action=new Action('voxelflow_open',{name:'VoxelFlow Studio',description:'Create Minecraft props and animated robots from ChatGPT or local presets.',icon:'smart_toy',click:()=>this.open()});MenuBar.addAction(this.action,'tools');
     workflow.onChange=()=>{this.report=workflow.lastReport;this.refresh();};workflow.onProposal=op=>this.review(op);connection.onChange=()=>this.refresh();this.refresh();
     for(const event of ['finished_edit','undo','redo','select_project'] as const)Blockbench.on(event,this.invalidate);
   }
@@ -53,11 +56,20 @@ export class Studio {
   propose(tool:string,args:Record<string,unknown>={}){void this.run(tool,{request_id:crypto.randomUUID(),...args});}
   refresh(){if(this.refreshing)return;this.refreshing=true;for(const root of this.roots)this.render(root);this.refreshing=false;}
   render(root:HTMLElement){
-    root.replaceChildren();const brand=node('div',undefined,'vf-brand');const title=node('div');title.append(node('div','ARTIST WORKSPACE','vf-kicker'),node('strong','VoxelFlow Studio'));brand.append(title,node('span','BEDROCK · 0.1','vf-badge'));root.append(brand);
+    const prop=isPropProject();
+    root.replaceChildren();const brand=node('div',undefined,'vf-brand');const title=node('div');title.append(node('div','ARTIST WORKSPACE','vf-kicker'),node('strong','VoxelFlow Studio'));brand.append(title,node('span','BEDROCK · 0.2','vf-badge'));root.append(brand);
     const status=node('div',undefined,'vf-status');status.append(node('span',undefined,`vf-dot ${this.connection.connected?'online':''}`),node('span',this.connection.status),button(this.connection.connected?'Disconnect':'Connect',()=>this.connection.connected?this.connection.disconnect():this.connectDialog(),'vf-connect'));root.append(status);
-    const steps=node('div',undefined,'vf-steps');['Create','Texture','Rig','Animate','Export'].forEach((text,i)=>steps.append(button(`${i+1} ${text}`,()=>{this.stage=i;this.message='';this.refresh();},i===this.stage?'active':'')));root.append(steps);
+    const steps=node('div',undefined,'vf-steps');['Create','Texture',prop?'Parts':'Rig','Animate','Export'].forEach((text,i)=>steps.append(button(`${i+1} ${text}`,()=>{this.stage=i;this.message='';this.refresh();},i===this.stage?'active':'')));root.append(steps);
     const content=node('div',undefined,'vf-card');root.append(content);
     if(this.stage===0){
+      content.append(node('h3','Describe it in ChatGPT.'),node('p','A leather bag. A crystal staff. A lantern, sword, chest, or your own idea. Your connected assistant designs the parts; you review the plan here.','vf-muted'));
+      content.append(node('p','Try: “Use VoxelFlow to make a brown leather backpack with gold buckles and a front pocket.”','vf-mini'));
+      content.append(this.select('Or start with an offline example',this.createKind,['bag','staff','robot'],v=>{this.createKind=v as typeof this.createKind;this.refresh();}));
+      if(this.createKind!=='robot'){
+        const preset=propPreset(this.createKind);
+        content.append(node('p',preset.description,'vf-muted'),node('p',`${preset.parts.length} editable parts · ${preset.materials.length} named colors · PNG + UVs`,'vf-mini'),button(`Review ${this.createKind} plan`,()=>this.propose('create_prop',{spec:preset}),'vf-primary'));
+        content.append(node('p','These are examples. ChatGPT can compose other objects from up to 128 cubes and 16 colors. No text interpretation runs inside this panel.','vf-mini'));
+      }else{
       content.append(node('h3','Meet your next character.'),node('p','Start with Atlas, an articulated robot. Every cube, joint and keyframe stays editable.','vf-muted'));
       content.append(this.field('Character name',this.spec.name,v=>this.spec.name=v));
       content.append(this.row(this.field('Height · pixels',this.spec.height,v=>this.spec.height=Number(v),'number',16,64),this.select('Build',this.spec.build,['balanced','slender','heavy'],v=>this.spec.build=v as any)));
@@ -66,25 +78,38 @@ export class Studio {
       content.append(button('Review robot plan',()=>{this.palette={...this.spec.palette};this.propose('create_model',{spec:this.spec});},'vf-primary'));
       content.append(node('p','Includes texture + 11 joints + idle, walk and punch. Opens a fresh tab.','vf-mini'));
       const details=node('details');details.append(node('summary','Bring your own model / use AI'));const help=node('div',undefined,'vf-muted');help.textContent='Open a .bbmodel with File → Open Model. VoxelFlow can map an existing humanoid with separate upper/lower limbs. For natural language, connect Codex or an MCP host and describe the character there. Quadrupeds, arbitrary mesh rigging, and image generation are not available in this release.';details.append(help);content.append(details);
+      }
     }else if(this.stage===1){
       content.append(node('h3','Make it yours.'),node('p','Change the generated colors without rebuilding. Individually painted pixels are preserved.','vf-muted'));
+      if(prop){
+        const materials=getPropMaterials();
+        for(const m of materials){const key=`${Project.uuid}:${m.name}`;content.append(this.field(m.name.replaceAll('_',' '),this.propColors.get(key)??m.color,v=>this.propColors.set(key,v),'color'));}
+        content.append(button('Review material colors',()=>this.propose('apply_prop_materials',{materials:materials.map(m=>({...m,color:this.propColors.get(`${Project.uuid}:${m.name}`)??m.color}))}),'vf-primary'),button('Open Paint mode',()=>this.guard(()=>Modes.options.paint.select()),'vf-secondary'));
+      }else{
       content.append(this.row(this.field('Armor',this.palette.primary,v=>this.palette.primary=v,'color'),this.field('Trim',this.palette.secondary,v=>this.palette.secondary=v,'color'),this.field('Eyes',this.palette.eyes,v=>this.palette.eyes=v,'color')));
       if(typeof Project!=='undefined'&&Project&&Texture.all[0]){const img=node('img',undefined,'vf-texture');img.src=Texture.all[0].getDataURL();img.alt='Current editable palette texture';content.append(img);}
       content.append(button('Review color change',()=>this.propose('apply_materials',{palette:this.palette}),'vf-primary'),button('Open Paint mode',()=>this.guard(()=>Modes.options.paint.select()),'vf-secondary'));
       content.append(node('p','The eyes use bright pixels. An emissive shader is not part of this export.','vf-mini'));
+      }
     }else if(this.stage===2){
+      if(prop){content.append(node('h3','Every part stays editable.'),node('p','This object uses named groups in the Outliner. Edit the straps, handle, crystal, or other parts directly. A static prop does not need arms, legs, or a humanoid skeleton.','vf-muted'),button('Check object structure',()=>this.validate(),'vf-primary'));}
+      else{
       content.append(node('h3','Give every part a joint.'),node('p','Generated robots arrive connected. For imported humanoids, match body parts to existing groups, then check their joint positions.','vf-muted'));
       content.append(button('Review detected rig',()=>this.propose('generate_rig'),'vf-primary'),button('Map body parts…',()=>this.mappingDialog(),'vf-secondary'),button('Check joints',()=>this.validate(),'vf-secondary'));
       content.append(node('p','Shoulder → upper arm → elbow → lower arm. Hip → thigh → knee → shin. Left means the character’s own left.','vf-mini'));
+      }
     }else if(this.stage===3){
+      if(prop){content.append(node('h3','A static Minecraft prop.'),node('p','Idle, walk, and punch are character presets. This object is ready for static export without those animations. Custom prop animation can be authored in Blockbench and exported with its native tools.','vf-muted'),button('Check export readiness',()=>{this.stage=4;this.validate();},'vf-primary'));}
+      else{
       content.append(node('h3','Put character in motion.'),node('p','Preview native animations. Adjust timing and strength, then review before replacing the three preset clips.','vf-muted'));
       for(const [clip,label] of [['idle','Idle · breathing'],['walk','Walk · alternating gait'],['attack','Punch · windup & recovery']])content.append(button(`▶  ${label}`,()=>void this.run('preview_animation',{clip,playing:true}),'vf-secondary'));
       content.append(button('Stop playback',()=>{Timeline.pause();},'vf-secondary'));
       content.append(this.row(this.field('Speed · 0.25–3×',this.speed,v=>this.speed=Number(v),'number',0.25,3),this.field('Strength · 0.1–1.5×',this.intensity,v=>this.intensity=Number(v),'number',0.1,1.5)));
       content.append(button('Review animation update',()=>this.propose('generate_animations',{options:{clips:['idle','walk','attack'],speed:this.speed,intensity:this.intensity}}),'vf-primary'));
+      }
     }else{
       content.append(node('h3','Ready for the next stage.'),node('p','Check the live scene, then save an organized Bedrock resource asset package.','vf-muted'),button('Run quality checks',()=>this.validate(),'vf-secondary'),button('Review Bedrock export',()=>this.propose('export_asset',{target:'bedrock'}),'vf-primary'));
-      content.append(node('p','Includes geometry, PNG, animations, controllers, client entity, manifest and editable source. Requires a matching behavior entity. Minecraft runtime is unverified.','vf-mini'));
+      content.append(node('p',prop?'Includes geometry, PNG, static client entity, render controller, manifest and editable source. Held/worn items still need item and attachable definitions. Minecraft runtime is unverified.':'Includes geometry, PNG, animations, controllers, client entity, manifest and editable source. Requires a matching behavior entity. Minecraft runtime is unverified.','vf-mini'));
     }
     if(this.workflow.busy)root.append(node('div','Applying approved change…','vf-error'));
     if(this.message)root.append(node('div',this.message,'vf-error'));

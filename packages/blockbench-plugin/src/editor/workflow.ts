@@ -40,10 +40,12 @@ export class Workflow {
   summary(tool:ToolName,args:any) {
     switch(tool){
       case 'create_model':return `Create “${args.spec.name}” in a new Bedrock tab: ${args.spec.height} units tall, ${args.spec.build} build, ${args.spec.detail} geometry. Colors ${args.spec.palette.primary}, ${args.spec.palette.secondary}, eyes ${args.spec.palette.eyes}. Add 11 editable joints and ${args.spec.animations.clips.join(', ')} animations at ${args.spec.animations.speed}× speed and ${args.spec.animations.intensity}× intensity. Existing tabs remain open.`;
+      case 'create_prop':return `Create “${args.spec.name}” in a new Bedrock tab.\n${args.spec.description}\n\n${args.spec.parts.length} editable cubes in ${new Set(args.spec.parts.map((p:any)=>p.group)).size} part groups. Materials: ${args.spec.materials.map((m:any)=>`${m.name} ${m.color}`).join(', ')}.\nParts include: ${args.spec.parts.slice(0,12).map((p:any)=>p.name.replaceAll('_',' ')).join(', ')}${args.spec.parts.length>12?'…':''}.\n\nA static prop with a real PNG and UVs. Existing tabs stay open. Game item/attachable registration is a separate integration step.`;
+      case 'apply_prop_materials':return `Recolor prop materials: ${args.materials.map((m:any)=>`${m.name} → ${m.color}`).join(', ')}. Preserve painted pixels and all geometry. Undo is available.`;
       case 'apply_materials':return `Recolor the palette to ${args.palette.primary} / ${args.palette.secondary}, eyes ${args.palette.eyes}. Preserve individually painted pixels, all geometry, and animations. Undo is available.`;
       case 'generate_rig':return `Map the current humanoid’s 11 body parts ${args.mapping?'using your selected bone names':'using exact names and known aliases'}. Check shoulder, elbow, hip, and knee connections. Imported joints and geometry will not move.`;
       case 'generate_animations':return `Replace the current ${args.options.clips.join(', ')} preset clips with editable keyframes at ${args.options.speed}× speed and ${args.options.intensity}× intensity. Other clips stay. This replaces manual edits within the selected clips; Undo is available.`;
-      case 'export_asset':return 'Check the current scene, then choose where to save a ZIP with Bedrock geometry, the current PNG texture, animations, controllers, client entity, manifest, source model, and validation report. This is a resource asset package requiring game-side integration.';
+      case 'export_asset':return 'Check the current scene, then save a ZIP with Bedrock geometry, the current PNG, client entity, render controller, manifest, source model, and validation report. Humanoid projects also include animations and their controller. Static props do not require those clips. Game-side entity or item/attachable integration is still required.';
       case 'undo_last_change':return 'Undo the latest VoxelFlow edit in the active tab. This will stop if another artist edit follows it. The exported ZIP, if any, stays on disk.';
       default:return tool;
     }
@@ -59,6 +61,8 @@ export class Workflow {
       let result:any;
       switch(op.tool){
         case 'create_model':result=editor.createRobot(plan.args.spec);break;
+        case 'create_prop':result=editor.createProp(plan.args.spec);break;
+        case 'apply_prop_materials':result=editor.applyPropMaterials(plan.args.materials);break;
         case 'apply_materials':result=editor.applyMaterials(plan.args.palette);break;
         case 'generate_rig':result=editor.mapRig(plan.args.mapping);break;
         case 'generate_animations':result=editor.animate(plan.args.options);break;

@@ -1,5 +1,11 @@
 # 90-second hackathon demo
 
+## Prompt-to-prop demo (0.2)
+
+After the connection setup below, ask: “Use VoxelFlow to create a brown leather adventurer backpack with gold buckles, a front pocket, a handle, and shoulder straps.” Approve the plan in Blockbench, orbit the editable result, then ask to change its leather to forest green. Approve that color change, validate, and export. The same general tool accepts a wizard staff, lantern, sword, chest, or another cube-based design.
+
+If the ChatGPT account connection is not configured, disclose that limitation and use `npm run demo -- --prop bag` for the real SDK-to-editor path, or the offline Bag/Staff examples. Saved native examples and screenshots are in `examples/props` and `docs/evidence`. The sequence below remains a separate animated-robot demo.
+
 ## Before the timer
 
 Run `npm ci`, `npm run build`, and `npm run bridge`. Install the built plugin, connect its token, and configure your MCP host using [the setup guide](mcp-integration.md). Confirm `get_editor_status` returns `connected: true`. Arrange Blockbench beside the chat, keep VoxelFlow at the top of the sidebar, and choose a convenient export folder. Rehearse host latency; the schedule assumes the assistant responds promptly.

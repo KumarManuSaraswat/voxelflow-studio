@@ -4,6 +4,16 @@ Tested on 2026-10-29 with Windows, Node 24.11.1, npm 11.6.2, and the installed B
 
 ## Automated results
 
+### Version 0.2: general props
+
+The expanded suite passes **75 tests in 6 files**, including arbitrary object blueprints, invalid materials/dimensions/bounds, paint-preserving named colors, static prop validation, approval deduplication, and animation-free package references. Type checking, plugin/server builds, and robot/bag/staff example generation pass.
+
+In actual Blockbench 5.2.2, MCP `create_prop` created a **28-cube bag with 8 groups** and a **16-cube staff with 6 groups**, each with a 128×16 PNG. Both required the real approval dialog. The bag's native Save dialog produced an eight-file ZIP with editable source and passing package checks. The staff's named crystal recolor changed the texture while preserving all cube UUIDs/coordinates; native Undo restored the exact captured state. Its saved `.bbmodel` reopened with prop metadata, five named materials, and no texture error. The reopened prop passed 5 checks with 1 engine-unverified warning and no failures.
+
+Evidence: [live prop operations and checks](evidence/props-live.json), [bag preview](evidence/adventurer-bag.png), [staff preview](evidence/arcane-staff.png), and native sources in `examples/props`. The official SDK client discovered all **14 tools**. ChatGPT account installation and automatic natural-language orchestration remain unverified.
+
+### Version 0.1 baseline: animated robot
+
 `npm run check` completed successfully after the final animation-identity correction:
 
 ```text

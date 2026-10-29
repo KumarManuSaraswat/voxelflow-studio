@@ -24,7 +24,9 @@ In a second terminal at the project root:
 npx @modelcontextprotocol/inspector node packages/mcp-server/dist/server.js
 ```
 
-Open the local Inspector URL printed by the official Inspector, connect the stdio transport, and list tools. Expect 12 tools. Call `get_editor_status` with `{}` and require `connected: true` before proceeding. `npm run demo -- --status` provides the same handshake path without the Inspector UI.
+Open the local Inspector URL printed by the official Inspector, connect the stdio transport, and list tools. Expect 14 tools. Call `get_editor_status` with `{}` and require `connected: true` before proceeding. `npm run demo -- --status` provides the same handshake path without the Inspector UI.
+
+For general objects, use `create_prop` with a `PropSpec` designed from the user's prompt. See [the complete prompt-to-model contract](prompt-to-model.md). `npm run demo -- --prop bag` or `--prop staff` exercises creation, validation, and export locally. The robot example below remains supported.
 
 Call `create_model` with this example, replacing `request_id` with a fresh UUID for each new intentional operation:
 
@@ -73,11 +75,13 @@ Suggested prompt:
 
 > Use VoxelFlow Studio. Inspect editor status, then create an animated Minecraft robot: tall, slender, blue armor, gold trim, cyan eyes, and idle, walk, and powerful punch animations. Present the structured plan, submit it once, and wait for my approval in Blockbench. Preview walk and punch. Validate the live scene and prepare a Bedrock resource asset export. Only report completion when the operation is applied.
 
-The server also exposes a `create_animated_robot` prompt with a `brief` argument. If an assistant retries after a timeout, it must reuse the original ID and exact parameters, or inspect that ID with `get_operation`. Do not generate another robot merely because approval is pending.
+The server exposes `create_minecraft_asset` and `create_animated_robot` prompts, each with a `brief` argument. The general prompt guides the assistant to design named materials and cube parts for the requested object. If an assistant retries after a timeout, it must reuse the original ID and exact parameters, or inspect that ID with `get_operation`. Do not generate another model merely because approval is pending.
 
 Current setup syntax is documented in [OpenAI's Codex MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli). This repository's stdio transport and schemas were tested using the official SDK, including a live editor workflow. Registration in a user's Codex installation and an autonomous natural-language run are not included in the recorded test results.
 
 ## ChatGPT: permissions and Secure MCP Tunnel
+
+Enter the creative prompt in ChatGPT; use Blockbench for reviewing changes and editing the result. An embedded ChatGPT UI is optional for a tool-based plugin according to the official [plugin quickstart](https://developers.openai.com/plugins/build/app-quickstart). VoxelFlow currently supplies the tools and desktop workspace. After upgrading from 0.1, refresh the host's tool discovery to expose `create_prop` and `apply_prop_materials`.
 
 ChatGPT cannot use the raw `ws://127.0.0.1:32123` editor bridge as an MCP endpoint. This project ships stdio MCP. The current official [Secure MCP Tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) supports forwarding a local stdio MCP command without opening an inbound public port.
 
@@ -104,6 +108,8 @@ For an HTTPS deployment, a separately designed authenticated Streamable HTTP MCP
 | `get_editor_status` | none; no request ID | Connection/project/version/format |
 | `inspect_project` | none; no request ID | Live counts, hierarchy, mapping, clips |
 | `create_model` | `spec` | Proposes a new robot tab with rig/texture/clips |
+| `create_prop` | general prop `spec` | Proposes any supported cube-based static object in a new tab |
+| `apply_prop_materials` | named `materials` | Recolors existing prop materials while preserving painted pixels |
 | `apply_materials` | `palette` | Proposes atlas recoloring |
 | `generate_rig` | optional complete `mapping` | Proposes existing bone-role mapping |
 | `generate_animations` | `options` | Proposes native clip replacement |
@@ -114,6 +120,6 @@ For an HTTPS deployment, a separately designed authenticated Streamable HTTP MCP
 | `cancel_operation` | `operation_id`; no request ID | Cancels pending proposal |
 | `preview_animation` | `clip`, optional `playing`; no request ID | Changes timeline preview only |
 
-All six scene/export mutation tools require a UUID `request_id`. Unknown fields, unsupported commands, out-of-range numbers, script strings, paths, and invalid identifiers are rejected by strict schemas. Responses carry `ok`, `data`, or `error` in both structured content and JSON text. Operational failures also set MCP `isError`.
+All eight scene/export mutation tools require a UUID `request_id`. Unknown fields, unsupported commands, out-of-range numbers, script strings, paths, and invalid identifiers are rejected by strict schemas. Responses carry `ok`, `data`, or `error` in both structured content and JSON text. Operational failures also set MCP `isError`.
 
 States are `pending_approval → applying → applied/failed/cancelled`, with `rejected` or `cancelled` available before application. Approval is valid for five minutes and tied to the exact project/Undo state. Idempotency/history are in memory for one plugin session, with a maximum of 256 operations. Reloading the plugin resets this ledger; inspect the model before issuing a new command after reload.

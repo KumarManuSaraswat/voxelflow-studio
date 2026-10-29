@@ -35,6 +35,34 @@ var AssetSpecSchema = z.object({
   target: z.literal("bedrock").default("bedrock"),
   animations: AnimationOptionsSchema.prefault({})
 }).strict();
+var PropMaterialSchema = z.object({ name: safeName, color: z.string().regex(/^#[0-9a-fA-F]{6}$/) }).strict();
+var PropMaterialsSchema = z.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
+var propPosition = z.tuple([z.number().min(-128).max(128), z.number().min(-128).max(128), z.number().min(-128).max(128)]);
+var propRotation = z.tuple([z.number().min(-180).max(180), z.number().min(-180).max(180), z.number().min(-180).max(180)]);
+var PropPartSchema = z.object({
+  name: safeName,
+  group: safeName.default("root"),
+  from: propPosition.describe("Minimum corner [x,y,z] in pixels. Y is up, front is negative Z."),
+  to: propPosition.describe("Maximum corner; every component must be greater than from."),
+  material: safeName,
+  rotation: propRotation.default([0, 0, 0]),
+  pivot: propPosition.optional().describe("Rotation pivot in model coordinates; defaults to this cube center.")
+}).strict().refine((p) => p.to.every((v, i) => v > p.from[i]), "Every cube must have positive width, height and depth.");
+var PropSpecSchema = z.object({
+  name: safeName,
+  namespace: safeName.default("voxelflow"),
+  description: z.string().min(1).max(600).describe("Artist-facing description of the designed object and requested details."),
+  materials: PropMaterialsSchema,
+  parts: z.array(PropPartSchema).min(1).max(128).describe("Compose ANY block-style prop from editable cubes; not restricted to named presets.")
+}).strict().superRefine((spec, ctx) => {
+  const materials = new Set(spec.materials.map((m) => m.name)), names = /* @__PURE__ */ new Set();
+  spec.parts.forEach((part, i) => {
+    if (names.has(part.name)) ctx.addIssue({ code: "custom", path: ["parts", i, "name"], message: "Part names must be unique." });
+    names.add(part.name);
+    if (!materials.has(part.material)) ctx.addIssue({ code: "custom", path: ["parts", i, "material"], message: "Use a material defined in materials." });
+  });
+  if ((/* @__PURE__ */ new Set(["root", ...spec.parts.map((p) => p.group)])).size > 32) ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 32 named groups." });
+});
 var roles = ["root", "torso", "head", "left_upper_arm", "left_lower_arm", "right_upper_arm", "right_lower_arm", "left_upper_leg", "left_lower_leg", "right_upper_leg", "right_lower_leg"];
 var RigMappingSchema = z.object(Object.fromEntries(roles.map((r) => [r, z.string().min(1).max(128)]))).strict();
 var requestId = z.string().uuid().describe("Unique operation ID. Reuse the SAME ID and parameters when retrying; never regenerate on a timeout.");
@@ -42,6 +70,8 @@ var toolSchemas = {
   get_editor_status: z.object({}).strict(),
   inspect_project: z.object({}).strict(),
   create_model: z.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
+  create_prop: z.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
+  apply_prop_materials: z.object({ request_id: requestId, materials: PropMaterialsSchema.describe("Update existing named prop materials; omitted materials keep their colors.") }).strict(),
   apply_materials: z.object({ request_id: requestId, palette: PaletteSchema }).strict(),
   generate_rig: z.object({ request_id: requestId, mapping: RigMappingSchema.optional() }).strict(),
   generate_animations: z.object({ request_id: requestId, options: AnimationOptionsSchema }).strict(),

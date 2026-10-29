@@ -1,0 +1,828 @@
+{
+  "date": "2026-10-29",
+  "blockbench": "5.2.2",
+  "version": "0.2.0",
+  "tools": [
+    "get_editor_status",
+    "inspect_project",
+    "create_model",
+    "create_prop",
+    "apply_prop_materials",
+    "apply_materials",
+    "generate_rig",
+    "generate_animations",
+    "validate_asset",
+    "export_asset",
+    "undo_last_change",
+    "get_operation",
+    "cancel_operation",
+    "preview_animation"
+  ],
+  "operations": [
+    {
+      "id": "137e2c45-ed00-4736-bd3a-6fbbf496fc18",
+      "tool": "create_prop",
+      "state": "applied",
+      "summary": "Create “adventurer_bag” in a new Bedrock tab.\nBrown leather adventurer backpack with gold buckles, front pocket, carry handle, and two shoulder straps.\n\n28 editable cubes in 7 part groups. Materials: leather #92502c, dark_leather #60351f, strap #3a241b, brass #deb34f.\nParts include: leather body, reinforced base, rounded top, overhanging flap, front pocket, pocket flap, pocket clasp, left front strap, left buckle top, left buckle bottom, left buckle left, left buckle right….\n\nA static prop with a real PNG and UVs. Existing tabs stay open. Game item/attachable registration is a separate integration step.",
+      "createdAt": "2026-10-29T15:16:44.131Z",
+      "result": {
+        "projectId": "4e8a4c90-1811-26cc-e0cd-4239c44263bf",
+        "kind": "prop",
+        "cubes": 28,
+        "bones": 8,
+        "animations": [],
+        "message": "Created in a new tab. The original project is preserved."
+      }
+    },
+    {
+      "id": "5c08a97c-3f38-4467-9578-aa737879a2dd",
+      "tool": "create_prop",
+      "state": "applied",
+      "summary": "Create “arcane_staff” in a new Bedrock tab.\nWooden wizard staff with a wrapped grip, gold fittings, forked crown, and violet crystal.\n\n16 editable cubes in 5 part groups. Materials: wood #62402b, leather #302e42, gold #e3b34e, crystal #9e64ee, highlight #e4ceff.\nParts include: wooden shaft, bottom cap, grip, grip wrap 0, grip wrap 1, grip wrap 2, grip wrap 3, upper collar, crystal socket, left prong, right prong, crystal core….\n\nA static prop with a real PNG and UVs. Existing tabs stay open. Game item/attachable registration is a separate integration step.",
+      "createdAt": "2026-10-29T15:19:45.609Z",
+      "result": {
+        "projectId": "a4ea8b70-e421-cd14-fef6-8dffa3f29952",
+        "kind": "prop",
+        "cubes": 16,
+        "bones": 6,
+        "animations": [],
+        "message": "Created in a new tab. The original project is preserved."
+      }
+    },
+    {
+      "id": "d3411225-4c9a-4885-be80-66e22370e950",
+      "tool": "export_asset",
+      "state": "applied",
+      "summary": "Check the current scene, then save a ZIP with Bedrock geometry, the current PNG, client entity, render controller, manifest, source model, and validation report. Humanoid projects also include animations and their controller. Static props do not require those clips. Game-side entity or item/attachable integration is still required.",
+      "createdAt": "2026-10-29T15:17:34.949Z",
+      "result": {
+        "saved": true,
+        "path": "C:\\Users\\mrdis\\Documents\\ChatGPT\\VoxelBuild\\dist\\adventurer_bag_live_bedrock_assets.zip",
+        "files": [
+          "models/entity/adventurer_bag.geo.json",
+          "textures/entity/adventurer_bag.png",
+          "entity/adventurer_bag.entity.json",
+          "render_controllers/adventurer_bag.render_controllers.json",
+          "manifest.json",
+          "validation-report.json",
+          "INTEGRATION.txt",
+          "source/adventurer_bag.bbmodel"
+        ],
+        "bytes": 8279,
+        "packageValidation": {
+          "ready": true,
+          "counts": {
+            "passed": 1,
+            "warning": 0,
+            "failed": 0
+          },
+          "findings": [
+            {
+              "stage": "export",
+              "status": "passed",
+              "code": "package.ok",
+              "message": "JSON, files, and geometry, texture, animation, controller references are consistent."
+            }
+          ],
+          "engineVerified": false
+        },
+        "engineVerified": false
+      }
+    },
+    {
+      "id": "0ee56ae9-8bb0-4d06-8411-86cf993ed040",
+      "tool": "apply_prop_materials",
+      "state": "applied",
+      "summary": "Recolor prop materials: crystal → #39b6d0. Preserve painted pixels and all geometry. Undo is available.",
+      "createdAt": "2026-10-29T15:21:03.542Z",
+      "result": {
+        "materials": [
+          {
+            "name": "wood",
+            "color": "#62402b"
+          },
+          {
+            "name": "leather",
+            "color": "#302e42"
+          },
+          {
+            "name": "gold",
+            "color": "#e3b34e"
+          },
+          {
+            "name": "crystal",
+            "color": "#39b6d0"
+          },
+          {
+            "name": "highlight",
+            "color": "#e4ceff"
+          }
+        ],
+        "preservedPaintedPixels": 0
+      }
+    }
+  ],
+  "recolor": {
+    "geometryPreserved": true,
+    "textureChanged": true,
+    "nativeUndoExact": true
+  },
+  "roundTrip": {
+    "project": {
+      "id": "4597f956-8479-b9fe-85c9-184faf210519",
+      "name": "arcane_staff",
+      "format": "bedrock",
+      "kind": "prop"
+    },
+    "identifier": "voxelflow:arcane_staff",
+    "geometry": {
+      "cubes": 16,
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "shaft",
+          "parent": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "fittings",
+          "parent": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "grip",
+          "parent": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "crown",
+          "parent": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "crystal",
+          "parent": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "name": "wooden_shaft",
+          "group": "shaft",
+          "from": [
+            -0.8,
+            1,
+            -0.8
+          ],
+          "to": [
+            0.8,
+            30,
+            0.8
+          ],
+          "pivot": [
+            0,
+            15.5,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            0,
+            0,
+            8,
+            16
+          ]
+        },
+        {
+          "name": "bottom_cap",
+          "group": "fittings",
+          "from": [
+            -1.1,
+            0,
+            -1.1
+          ],
+          "to": [
+            1.1,
+            2,
+            1.1
+          ],
+          "pivot": [
+            0,
+            1,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "grip",
+          "group": "grip",
+          "from": [
+            -1.05,
+            10,
+            -1.05
+          ],
+          "to": [
+            1.05,
+            18,
+            1.05
+          ],
+          "pivot": [
+            0,
+            14,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            8,
+            0,
+            16,
+            16
+          ]
+        },
+        {
+          "name": "grip_wrap_0",
+          "group": "grip",
+          "from": [
+            -1.18,
+            10.5,
+            -1.18
+          ],
+          "to": [
+            1.18,
+            11.1,
+            1.18
+          ],
+          "pivot": [
+            0,
+            10.8,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "grip_wrap_1",
+          "group": "grip",
+          "from": [
+            -1.18,
+            12.3,
+            -1.18
+          ],
+          "to": [
+            1.18,
+            12.9,
+            1.18
+          ],
+          "pivot": [
+            0,
+            12.6,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "grip_wrap_2",
+          "group": "grip",
+          "from": [
+            -1.18,
+            14.1,
+            -1.18
+          ],
+          "to": [
+            1.18,
+            14.7,
+            1.18
+          ],
+          "pivot": [
+            0,
+            14.4,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "grip_wrap_3",
+          "group": "grip",
+          "from": [
+            -1.18,
+            15.9,
+            -1.18
+          ],
+          "to": [
+            1.18,
+            16.5,
+            1.18
+          ],
+          "pivot": [
+            0,
+            16.2,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "upper_collar",
+          "group": "fittings",
+          "from": [
+            -1.35,
+            26,
+            -1.35
+          ],
+          "to": [
+            1.35,
+            28,
+            1.35
+          ],
+          "pivot": [
+            0,
+            27,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "crystal_socket",
+          "group": "crown",
+          "from": [
+            -2.4,
+            29,
+            -1.7
+          ],
+          "to": [
+            2.4,
+            31,
+            1.7
+          ],
+          "pivot": [
+            0,
+            30,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "left_prong",
+          "group": "crown",
+          "from": [
+            -4,
+            29,
+            -0.65
+          ],
+          "to": [
+            -2.8,
+            35,
+            0.65
+          ],
+          "pivot": [
+            -3.4,
+            32,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            -20
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "right_prong",
+          "group": "crown",
+          "from": [
+            2.8,
+            29,
+            -0.65
+          ],
+          "to": [
+            4,
+            35,
+            0.65
+          ],
+          "pivot": [
+            3.4,
+            32,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            20
+          ],
+          "uv": [
+            16,
+            0,
+            24,
+            16
+          ]
+        },
+        {
+          "name": "crystal_core",
+          "group": "crystal",
+          "from": [
+            -2.1,
+            31,
+            -2.1
+          ],
+          "to": [
+            2.1,
+            37,
+            2.1
+          ],
+          "pivot": [
+            0,
+            34,
+            0
+          ],
+          "rotation": [
+            0,
+            45,
+            0
+          ],
+          "uv": [
+            24,
+            0,
+            32,
+            16
+          ]
+        },
+        {
+          "name": "crystal_tip",
+          "group": "crystal",
+          "from": [
+            -1.3,
+            36,
+            -1.3
+          ],
+          "to": [
+            1.3,
+            40,
+            1.3
+          ],
+          "pivot": [
+            0,
+            38,
+            0
+          ],
+          "rotation": [
+            0,
+            45,
+            0
+          ],
+          "uv": [
+            24,
+            0,
+            32,
+            16
+          ]
+        },
+        {
+          "name": "crystal_glint",
+          "group": "crystal",
+          "from": [
+            -0.45,
+            32,
+            -3.05
+          ],
+          "to": [
+            0.45,
+            36,
+            -2.7
+          ],
+          "pivot": [
+            0,
+            34,
+            -2.875
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            32,
+            0,
+            40,
+            16
+          ]
+        },
+        {
+          "name": "left_rune",
+          "group": "fittings",
+          "from": [
+            -1.6,
+            22,
+            -1.4
+          ],
+          "to": [
+            -0.6,
+            24,
+            -0.9
+          ],
+          "pivot": [
+            -1.1,
+            23,
+            -1.15
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            24,
+            0,
+            32,
+            16
+          ]
+        },
+        {
+          "name": "right_rune",
+          "group": "fittings",
+          "from": [
+            0.6,
+            22,
+            -1.4
+          ],
+          "to": [
+            1.6,
+            24,
+            -0.9
+          ],
+          "pivot": [
+            1.1,
+            23,
+            -1.15
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "uv": [
+            24,
+            0,
+            32,
+            16
+          ]
+        }
+      ]
+    },
+    "materials": [
+      {
+        "name": "wood",
+        "color": "#62402b"
+      },
+      {
+        "name": "leather",
+        "color": "#302e42"
+      },
+      {
+        "name": "gold",
+        "color": "#e3b34e"
+      },
+      {
+        "name": "crystal",
+        "color": "#9e64ee"
+      },
+      {
+        "name": "highlight",
+        "color": "#e4ceff"
+      }
+    ],
+    "mapping": {
+      "root": "root"
+    },
+    "rigDetection": null,
+    "textures": [
+      {
+        "id": "12c36465-7bdb-fdfd-1088-35c525357b80",
+        "name": "arcane_staff.png",
+        "width": 128,
+        "height": 16,
+        "pngBytes": 367
+      }
+    ],
+    "animations": [],
+    "unsupported": []
+  },
+  "quality": {
+    "ready": true,
+    "counts": {
+      "passed": 5,
+      "warning": 1,
+      "failed": 0
+    },
+    "findings": [
+      {
+        "stage": "geometry",
+        "status": "passed",
+        "code": "geometry.ok",
+        "message": "16 editable cubes have valid dimensions."
+      },
+      {
+        "stage": "rig",
+        "status": "passed",
+        "code": "rig.ok",
+        "message": "6 object groups form a valid hierarchy; no humanoid rig is required."
+      },
+      {
+        "stage": "texture",
+        "status": "passed",
+        "code": "texture.ok",
+        "message": "All faces reference the PNG atlas and valid UVs."
+      },
+      {
+        "stage": "animation",
+        "status": "passed",
+        "code": "animation.ok",
+        "message": "Static prop: character animations are not required."
+      },
+      {
+        "stage": "export",
+        "status": "passed",
+        "code": "export.ok",
+        "message": "Names and supported features are consistent with the Bedrock asset exporter."
+      },
+      {
+        "stage": "export",
+        "status": "warning",
+        "code": "export.engine_unverified",
+        "message": "Bedrock assets are structurally checked; Minecraft runtime has not been tested.",
+        "correction": "Integrate the resource assets with a behavior entity and test in Minecraft."
+      }
+    ],
+    "engineVerified": false
+  },
+  "liveExport": {
+    "fileCount": 8,
+    "files": [
+      "models/entity/adventurer_bag.geo.json",
+      "textures/entity/adventurer_bag.png",
+      "entity/adventurer_bag.entity.json",
+      "render_controllers/adventurer_bag.render_controllers.json",
+      "manifest.json",
+      "validation-report.json",
+      "INTEGRATION.txt",
+      "source/adventurer_bag.bbmodel"
+    ],
+    "cubes": 28,
+    "groups": 8,
+    "validation": {
+      "ready": true,
+      "counts": {
+        "passed": 1,
+        "warning": 0,
+        "failed": 0
+      },
+      "findings": [
+        {
+          "stage": "export",
+          "status": "passed",
+          "code": "package.ok",
+          "message": "JSON, files, and geometry, texture, animation, controller references are consistent."
+        }
+      ],
+      "engineVerified": false
+    }
+  },
+  "accountConnected": false,
+  "engineVerified": false
+}
