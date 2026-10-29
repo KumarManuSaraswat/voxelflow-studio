@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.png binary
 *.zip binary
+**/dist/** linguist-generated=true
+plugins/voxelflow-studio/server/*.mjs linguist-generated=true
+plugins/voxelflow-studio/blockbench/*.js linguist-generated=true

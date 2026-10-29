@@ -2,7 +2,7 @@
 
 **Turn prompts into editable Minecraft-style models.**
 
-[![Checks](https://github.com/KumarManuSaraswat/voxelflow-studio/actions/workflows/check.yml/badge.svg)](https://github.com/KumarManuSaraswat/voxelflow-studio/actions/workflows/check.yml)
+[![Checks](https://github.com/KumarManuSaraswat/voxelflow-studio/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/KumarManuSaraswat/voxelflow-studio/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-147D72.svg)](LICENSE)
 [![Status: desktop beta](https://img.shields.io/badge/status-desktop_beta-147D72.svg)](docs/distribution.md)
 
