@@ -1,0 +1,23 @@
+name: Feature idea
+description: Suggest an improvement to an artist's workflow.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What are you trying to create or accomplish?
+      description: Describe the artist's goal and the current obstacle.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: A concrete prompt or before/after example helps.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and scope
+      description: Optional. Include workarounds or related roadmap items.

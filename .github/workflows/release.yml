@@ -1,0 +1,54 @@
+name: Publish desktop beta
+on:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Check tag and release notes
+        shell: pwsh
+        run: |
+          $releaseVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($env:RELEASE_TAG -cne "v$releaseVersion") { throw 'Tag must match package.json version.' }
+          if (-not (Test-Path "docs/releases/$releaseVersion.md")) { throw 'Release notes are required.' }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run package:desktop
+      - run: npm run verify:desktop
+      - run: npm run package
+      - name: Publish verified beta assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $releaseAssets = @(
+            "dist/voxelflow-desktop-beta-$releaseVersion.zip",
+            "dist/voxelflow-plugin-$releaseVersion.zip",
+            "dist/voxelflow-studio-$releaseVersion.zip",
+            'dist/DESKTOP-SHA256SUMS.txt',
+            'dist/SHA256SUMS.txt',
+            'dist/voxelflow_studio.js',
+            'dist/atlas_robot_bedrock_assets.zip',
+            'dist/atlas_robot_live_bedrock_assets.zip',
+            'dist/adventurer_bag_bedrock_assets.zip',
+            'dist/arcane_staff_bedrock_assets.zip',
+            'dist/adventurer_bag_live_bedrock_assets.zip'
+          )
+          gh release create $env:RELEASE_TAG @releaseAssets --verify-tag --prerelease --title "VoxelFlow Studio $releaseVersion — Desktop beta" --notes-file "docs/releases/$releaseVersion.md"
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }

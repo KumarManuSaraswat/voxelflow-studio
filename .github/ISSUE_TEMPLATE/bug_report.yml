@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible problem with the desktop beta.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities, follow SECURITY.md. Never attach bridge.json or a session token."
+  - type: input
+    id: versions
+    attributes:
+      label: Versions and environment
+      description: VoxelFlow version, operating system, Blockbench version, Node version, and chat host if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the prompt or minimal example when useful.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the operation status or error text, with credentials removed.
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Screenshots or example files
+      description: Optional. Share only material you have permission to publish and remove unrelated personal content.
