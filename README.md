@@ -24,7 +24,7 @@ The prompt belongs in your AI chat; Blockbench is the model workspace. Bag, Staf
 
 ## What works today
 
-| Capability | Desktop beta 0.3.0 |
+| Capability | Desktop beta 0.3.1 |
 | --- | --- |
 | General props | Up to 128 cubes, 16 named materials, and 32 groups, with rotations and pivots |
 | Texturing | PNG atlas, per-face UVs, native painting, and named recoloring that preserves painted pixels |
@@ -39,7 +39,7 @@ This is an early desktop beta. Structural changes through MCP currently create a
 
 Requires **Node.js 22+**, **Blockbench desktop 5.2+**, and a desktop ChatGPT/Codex host supporting local plugins. Windows is tested; macOS/Linux are not yet verified.
 
-**[Download the desktop beta ZIP](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/download/v0.3.0/voxelflow-desktop-beta-0.3.0.zip)** · [Release notes](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/tag/v0.3.0) · [Full installation guide](plugins/voxelflow-studio/INSTALL.md)
+**[Download the desktop beta ZIP](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/download/v0.3.1/voxelflow-desktop-beta-0.3.1.zip)** · [Release notes](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/tag/v0.3.1) · [Full installation guide](plugins/voxelflow-studio/INSTALL.md)
 
 1. Extract the ZIP. Load its `plugins/voxelflow-studio/blockbench/voxelflow_studio.js` in Blockbench using **File → Plugins → Load Plugin from File**.
 2. Double-click `plugins/voxelflow-studio/Start VoxelFlow.cmd` and keep the companion running.

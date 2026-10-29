@@ -4,7 +4,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { resolve } from 'node:path';
 import { AssetSpecSchema } from '../packages/core/src/schema';
 import {propPreset} from '../packages/core/src/props';
-const client=new Client({name:'voxelflow-demo',version:'0.3.0'});
+const client=new Client({name:'voxelflow-demo',version:'0.3.1'});
 await client.connect(new StdioClientTransport({command:process.execPath,args:[resolve('packages/mcp-server/dist/server.js')],stderr:'inherit'}));
 async function call(name:string,args:Record<string,unknown>={}){const r=await client.callTool({name,arguments:args});const d=r.structuredContent as any;if(!d?.ok)throw new Error(d?.error??JSON.stringify(r));return d.data;}
 async function mutation(name:string,args:Record<string,unknown>){const request_id=crypto.randomUUID(),op=await call(name,{request_id,...args});console.log(`${op.summary}\nApprove this proposal in Blockbench. Operation: ${request_id}`);const until=Date.now()+5*60*1000;while(Date.now()<until){await new Promise(r=>setTimeout(r,700));const state=await call('get_operation',{operation_id:request_id});if(state.state==='applied'){console.log('Applied:',state.result);return;}if(['failed','rejected','cancelled'].includes(state.state))throw new Error(state.error??state.state);}throw new Error('Approval timed out. Inspect/cancel the operation before retrying.');}

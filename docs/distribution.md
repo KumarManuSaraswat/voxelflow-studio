@@ -14,7 +14,7 @@ The [official desktop-only submission guide](https://developers.openai.com/plugi
 
 ## Directory preparation still required
 
-Confirm the submitting organization's local-MCP eligibility and verified developer identity. Prepare live support, privacy, and terms URLs; listing icons; a walkthrough; and reviewer instructions. Test the installed experience in the intended ChatGPT desktop host and supported account/workspace. Submit `voxelflow-plugin-0.3.0.zip` through the approved route, resolve review findings, and publish after approval. These account-level steps are not completed. Metadata intentionally does not invent legal URLs or claim certification.
+Confirm the submitting organization's local-MCP eligibility and verified developer identity. Prepare live support, privacy, and terms URLs; listing icons; a walkthrough; and reviewer instructions. Test the installed experience in the intended ChatGPT desktop host and supported account/workspace. Submit `voxelflow-plugin-0.3.1.zip` through the approved route, resolve review findings, and publish after approval. These account-level steps are not completed. Metadata intentionally does not invent legal URLs or claim certification.
 
 ## Browser-only ChatGPT
 

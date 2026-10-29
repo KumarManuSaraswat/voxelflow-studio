@@ -22019,7 +22019,7 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
     author: "VoxelFlow Studio contributors",
     description: "Prompt-designed Minecraft props and animated robots: editable geometry, named materials, quality checks and Bedrock exports. Connect ChatGPT/Codex through MCP or use offline examples.",
     icon: "smart_toy",
-    version: "0.3.0",
+    version: "0.3.1",
     min_version: "5.2.0",
     variant: "desktop",
     tags: ["Minecraft: Bedrock Edition", "Animation", "Utility"],

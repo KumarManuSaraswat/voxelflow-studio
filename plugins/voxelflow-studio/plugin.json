@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "voxelflow-studio",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Create editable Minecraft-style props and animated robots in your local Blockbench editor from a chat prompt.",
   "license": "MIT",
   "author": {"name": "KumarManuSaraswat", "url": "https://github.com/KumarManuSaraswat"},

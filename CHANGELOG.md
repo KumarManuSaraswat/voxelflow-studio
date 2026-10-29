@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 — Public desktop beta
+
+- Correct dependency-lock entries accidentally changed during the 0.3.0 version update, restoring clean npm installs.
+- Retain the 0.3 desktop functionality, with rebuilt packages and automated public release checks.
+
+See [release notes and known limits](docs/releases/0.3.1.md). The 0.3.0 tag is retained for history; its release workflow stopped before publishing assets.
+
 ## 0.3.0 — Desktop beta
 
 - Installable local desktop plugin with a portable manifest, MCP configuration, and setup/modeling skills.
