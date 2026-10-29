@@ -1,0 +1,6 @@
+# Upload only the public website when deploying with Vercel CLI.
+**
+!vercel.json
+!website/
+!website/dist/
+!website/dist/**

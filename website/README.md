@@ -7,3 +7,11 @@ The interactive viewer renders the actual bag, staff, and Atlas robot cube bluep
 Preview `dist/` with a static HTTP server. Main files: `index.html`, `guide.html`, `styles.css`, `app.js`, and `assets/models.json`. Typography is bundled Manrope under its included SIL Open Font License. Models and original website code follow the VoxelFlow project MIT license.
 
 Update versioned download URLs and the setup compatibility notes when publishing a new plugin release. Keep the distinction between verified Codex/editor functionality and unverified ChatGPT account onboarding visible.
+
+## Vercel deployment
+
+Public website: <https://voxelflow-studio.vercel.app>.
+
+The repository-root `vercel.json` publishes `website/dist` as a static site. Leave the Vercel Root Directory at the repository root, select the **Other** framework preset, and use the checked-in overrides for empty install/build commands. The website does not need the companion server or any environment variables.
+
+Production deployments follow the GitHub `main` branch. To deploy manually from the repository root with an authorized Vercel account, run `vercel --prod`. `.vercelignore` limits CLI uploads to the public website and deployment configuration. The local `.vercel` project link stays out of Git.
