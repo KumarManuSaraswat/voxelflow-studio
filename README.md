@@ -8,7 +8,7 @@
 
 Describe a leather bag, a crystal staff, or your own cube-based object in a connected ChatGPT/Codex desktop chat. VoxelFlow brings the design into Blockbench with editable parts, a pixel texture, and export checks. Keep creating with prompts or finish the details by hand.
 
-[Install the beta](#install) · [Examples](examples/props/) · [Contribute](CONTRIBUTING.md) · [Roadmap](docs/roadmap.md)
+[Website](https://voxelflow-studio.kumarsaraswat1983.chatgpt.site/) · [Interactive setup guide](https://voxelflow-studio.kumarsaraswat1983.chatgpt.site/guide.html) · [Install the beta](#install) · [Examples](examples/props/) · [Contribute](CONTRIBUTING.md) · [Roadmap](docs/roadmap.md)
 
 ![An editable adventurer backpack created in Blockbench with VoxelFlow](docs/evidence/adventurer-bag.png)
 
