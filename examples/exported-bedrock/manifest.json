@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "VoxelFlow · atlas_robot",
+    "description": "Integration-ready resource assets; requires a behavior entity.",
+    "uuid": "75a56d43-8309-49eb-a881-72d6d70abbe2",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      0
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "c8189acb-75a0-4b66-8c16-b4db74bb472f",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

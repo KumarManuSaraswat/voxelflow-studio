@@ -1,0 +1,11 @@
+{
+  "productionInstall": true,
+  "tools": 12,
+  "liveEditorConnected": true,
+  "blockbench": "5.2.2",
+  "quality": {
+    "passed": 5,
+    "warning": 1,
+    "failed": 0
+  }
+}

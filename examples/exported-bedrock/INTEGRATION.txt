@@ -1,0 +1,9 @@
+VoxelFlow Studio — voxelflow:atlas_robot
+
+This is a resource asset package, not a complete playable mob.
+Merge these files into a Bedrock resource pack, or enable this resource pack with a behavior pack defining the same identifier.
+Configure your behavior entity's collision box, health, movement, spawn rules, and attack behavior.
+The controller uses query.modified_move_speed and query.is_delayed_attacking. A behavior with a delayed attack must drive the latter; otherwise the punch remains previewable in Blockbench only.
+Cyan eye pixels are bright colors, not an emissive material.
+Numeric, linear/step keyframes and per-face cube UVs are supported.
+Validate in your Minecraft Bedrock version. Runtime compatibility is NOT verified.

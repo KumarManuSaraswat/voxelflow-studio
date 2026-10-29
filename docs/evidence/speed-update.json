@@ -1,0 +1,38 @@
+{
+  "geometryPreserved": true,
+  "texturePreserved": true,
+  "before": [
+    {
+      "name": "animation.voxelflow.atlas_robot.idle",
+      "length": 3,
+      "frames": 20
+    },
+    {
+      "name": "animation.voxelflow.atlas_robot.walk",
+      "length": 1.2,
+      "frames": 40
+    },
+    {
+      "name": "animation.voxelflow.atlas_robot.attack",
+      "length": 1,
+      "frames": 25
+    }
+  ],
+  "after": [
+    {
+      "name": "animation.voxelflow.atlas_robot.idle",
+      "length": 2,
+      "frames": 20
+    },
+    {
+      "name": "animation.voxelflow.atlas_robot.walk",
+      "length": 0.8,
+      "frames": 40
+    },
+    {
+      "name": "animation.voxelflow.atlas_robot.attack",
+      "length": 0.666667,
+      "frames": 25
+    }
+  ]
+}

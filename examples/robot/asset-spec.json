@@ -1,0 +1,23 @@
+{
+  "name": "atlas_robot",
+  "namespace": "voxelflow",
+  "template": "robot",
+  "height": 40,
+  "build": "slender",
+  "detail": "detailed",
+  "palette": {
+    "primary": "#2878c8",
+    "secondary": "#e7ad42",
+    "eyes": "#6df5ff"
+  },
+  "target": "bedrock",
+  "animations": {
+    "clips": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "speed": 1,
+    "intensity": 1
+  }
+}

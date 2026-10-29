@@ -1,0 +1,49 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.voxelflow.atlas_robot": {
+      "initial_state": "idle",
+      "states": {
+        "idle": {
+          "animations": [
+            "idle"
+          ],
+          "transitions": [
+            {
+              "attack": "query.is_delayed_attacking"
+            },
+            {
+              "walk": "query.modified_move_speed > 0.05"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "walk": {
+          "animations": [
+            "walk"
+          ],
+          "transitions": [
+            {
+              "attack": "query.is_delayed_attacking"
+            },
+            {
+              "idle": "query.modified_move_speed <= 0.05"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "attack": {
+          "animations": [
+            "attack"
+          ],
+          "transitions": [
+            {
+              "idle": "query.all_animations_finished"
+            }
+          ],
+          "blend_transition": 0.1
+        }
+      }
+    }
+  }
+}

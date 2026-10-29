@@ -1,0 +1,31 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "voxelflow:atlas_robot",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/atlas_robot"
+      },
+      "geometry": {
+        "default": "geometry.voxelflow.atlas_robot"
+      },
+      "animations": {
+        "idle": "animation.voxelflow.atlas_robot.idle",
+        "walk": "animation.voxelflow.atlas_robot.walk",
+        "attack": "animation.voxelflow.atlas_robot.attack",
+        "main": "controller.animation.voxelflow.atlas_robot"
+      },
+      "scripts": {
+        "animate": [
+          "main"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.voxelflow.atlas_robot"
+      ]
+    }
+  }
+}

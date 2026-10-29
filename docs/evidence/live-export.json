@@ -1,0 +1,38 @@
+{
+  "blockbench": "5.2.2",
+  "files": [
+    "models/entity/atlas_robot.geo.json",
+    "textures/entity/atlas_robot.png",
+    "animations/atlas_robot.animation.json",
+    "animation_controllers/atlas_robot.controller.json",
+    "entity/atlas_robot.entity.json",
+    "render_controllers/atlas_robot.render_controllers.json",
+    "manifest.json",
+    "validation-report.json",
+    "INTEGRATION.txt",
+    "source/atlas_robot.bbmodel"
+  ],
+  "nativeSource": {
+    "cubes": 43,
+    "bones": 11,
+    "animations": 3,
+    "keyframes": 85
+  },
+  "packageValidation": {
+    "ready": true,
+    "counts": {
+      "passed": 1,
+      "warning": 0,
+      "failed": 0
+    },
+    "findings": [
+      {
+        "stage": "export",
+        "status": "passed",
+        "code": "package.ok",
+        "message": "JSON, files, and geometry, texture, animation, controller references are consistent."
+      }
+    ],
+    "engineVerified": false
+  }
+}
