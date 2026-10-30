@@ -94,6 +94,12 @@ VoxelFlow is an MIT-licensed community project, initially maintained by [@KumarM
 
 Read [Contributing](CONTRIBUTING.md) before a pull request. Our [governance](GOVERNANCE.md) describes how contributors can become maintainers and how the project can move into a dedicated organization as it grows. Community participation follows the [Code of Conduct](CODE_OF_CONDUCT.md); vulnerability reports follow the [security policy](SECURITY.md).
 
+## Support development
+
+[Sponsor VoxelFlow's maintainer on GitHub](https://github.com/sponsors/KumarManuSaraswat) to help fund maintenance, clearer installation, compatibility testing, better model editing, Minecraft export improvements, and contributor documentation.
+
+VoxelFlow remains MIT licensed. Sponsorship supports the maintainer's work; it does not purchase a feature, deadline, or support guarantee. Proposed priorities are tracked in the [roadmap](docs/roadmap.md), with progress in issues and releases.
+
 ## License and acknowledgments
 
 Original project code is [MIT licensed](LICENSE). Bundled dependencies retain their [license notices](plugins/voxelflow-studio/THIRD_PARTY_NOTICES.txt); development dependency information is in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
