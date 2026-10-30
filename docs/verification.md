@@ -4,6 +4,12 @@ Tested on 2026-10-29 with Windows, Node 24.11.1, npm 11.6.2, and the installed B
 
 ## Automated results
 
+### Version 0.3.3: standalone setup diagnostics
+
+All 84 tests, type checking, build, and examples pass on Windows with Node 24.11.1. Fresh-extraction verification checks the bundled diagnostic without node_modules, launched from outside the plugin folder. It covers missing package files, a disconnected editor, required tool discovery, custom companion configuration, credential suppression, and a connected protocol fixture. The fixture only tests diagnostic behavior; it is not evidence of native editor behavior or successful ChatGPT onboarding. Diagnostics must issue only get_editor_status and explicitly report that AI-host access is not checked.
+
+The download now includes root-level Start/Check launchers and a prompt guide. CI exercises the automated suite and package on Windows/Linux with Node 22/24; results do not establish native Linux editor support.
+
 ### Version 0.3.2: live prompt integration
 
 The first Codex CLI integration test exposed a production compatibility bug: tuple-style coordinate schemas caused the host to skip `create_prop`. Version 0.3.2 uses homogeneous numeric arrays of exactly three values, preserving core bounds and tuple output. The MCP integration test now checks the advertised schema. All **84 tests in 7 files**, type checking, build, examples, and fresh-extraction desktop verification pass.

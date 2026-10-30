@@ -4,6 +4,8 @@ You can contribute example prompts and models, test the desktop experience, impr
 
 ## Choose a contribution
 
+See [specific starter tasks](docs/contributor-tasks.md), [installation reports](https://github.com/KumarManuSaraswat/voxelflow-studio/issues/new?template=installation.yml), and [model showcases](https://github.com/KumarManuSaraswat/voxelflow-studio/issues/new?template=showcase.yml). Artists and testers can contribute without setting up a development environment.
+
 Use [issues](https://github.com/KumarManuSaraswat/voxelflow-studio/issues) to report a reproducible bug or propose a feature. For substantial changes, explain the artist's workflow and discuss the approach before implementation. Small corrections can go straight to a pull request. There are no response-time guarantees during this early volunteer stage.
 
 For an example, include the prompt, editable source, a screenshot, and what you checked. Submit only models, textures, and other material you have permission to share. Remove private paths, connection tokens, and unrelated content from captures.

@@ -1,0 +1,42 @@
+name: Installation or connection help
+description: Help us find where setup stopped; no coding required.
+title: "[Setup]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Run Check VoxelFlow.cmd first if available. Never upload bridge.json, tokens, or unrelated personal content."
+  - type: input
+    id: environment
+    attributes:
+      label: Versions
+      description: OS, VoxelFlow, Node.js, and Blockbench versions.
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Chat host and execution mode
+      description: Which app? Local or cloud? Is VoxelFlow enabled? No account credentials.
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where did setup stop?
+      options:
+        - Loading VoxelFlow in Blockbench
+        - Starting the companion
+        - Connecting Blockbench
+        - Installing or enabling the chat plugin
+        - Chat says tools are unavailable
+        - Model approval or creation
+        - Everything worked - sharing a platform report
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostic output and what you tried
+      description: Paste the Check VoxelFlow output and the exact error. Review for personal information first.
+    validations:
+      required: true

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.3 — First-use diagnostics and community contributions
+
+- Bundle read-only diagnostics and place Windows launchers beside START-HERE.md in the desktop download.
+- Fix custom companion configuration propagation in diagnostics; verify connected, disconnected, and incomplete-package cases from a fresh extraction.
+- Distinguish missing chat tools from disconnected Blockbench in the setup skill and installation guide.
+- Add a prompt gallery, contributor starter tasks, and installation/showcase issue forms.
+
+See [release notes](docs/releases/0.3.3.md).
+
 ## 0.3.2 — AI-host compatibility and setup checks
 
 - Fix `create_prop` discovery in Codex: coordinate schemas now advertise homogeneous numeric arrays with exactly three values, preserving validation bounds and tuple values internally.

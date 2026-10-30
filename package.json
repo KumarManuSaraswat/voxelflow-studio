@@ -1,11 +1,13 @@
 {
   "name": "voxelflow-studio",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "license": "MIT",
   "private": true,
   "type": "module",
   "description": "An artist-first Blockbench creative pipeline with quality gates and a local MCP companion.",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:desktop": "npm run build && node scripts/build-desktop.mjs",

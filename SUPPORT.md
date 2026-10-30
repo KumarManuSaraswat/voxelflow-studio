@@ -4,6 +4,8 @@ Start with the [installation guide](plugins/voxelflow-studio/INSTALL.md), [MCP s
 
 | Symptom | Check |
 | --- | --- |
+| Unsure where setup failed | Run Check VoxelFlow.cmd from the extracted desktop ZIP. No npm install is needed. It checks local tools and Blockbench, not chat permissions. |
+| Local checks pass, chat tools missing | Use local execution with VoxelFlow enabled in a fresh desktop chat. A plugin mention alone does not connect a cloud chat to your laptop. |
 | Plugin missing | Use Blockbench desktop 5.2+, load the built plugin file, then open Tools → VoxelFlow Studio. The web editor is unsupported. |
 | Desktop plugin missing in chat | Install the local marketplace source, enable VoxelFlow, and start a fresh local chat. Workspace policies and host support can restrict local plugins. |
 | Bridge disconnected | Start the companion and click Connect in Blockbench. Starting the MCP server alone does not connect the editor. |

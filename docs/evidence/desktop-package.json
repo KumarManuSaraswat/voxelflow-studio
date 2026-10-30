@@ -1,11 +1,18 @@
 {
-  "version": "0.3.2",
-  "archiveFiles": 15,
+  "version": "0.3.3",
+  "archiveFiles": 20,
   "nodeModulesRequired": false,
   "mcpTools": 14,
   "mcpPrompts": 2,
   "disconnectedReportedHonestly": true,
   "invalidInputRejected": true,
   "tokenPrinted": false,
-  "manifestPathsExist": true
+  "manifestPathsExist": true,
+  "standaloneDiagnostics": {
+    "disconnected": true,
+    "incompletePackage": true,
+    "connectedProtocolFixture": true,
+    "readOnly": true,
+    "hostAccessNotAssumed": true
+  }
 }

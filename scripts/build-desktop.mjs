@@ -2,7 +2,7 @@ import {build} from 'esbuild';
 import {mkdir,readFile,writeFile,copyFile,readdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 const root='plugins/voxelflow-studio';
-const result=await build({entryPoints:['packages/mcp-server/src/server.ts','packages/mcp-server/src/bridge-cli.ts'],outdir:`${root}/server`,outExtension:{'.js':'.mjs'},bundle:true,format:'esm',platform:'node',target:'node22',external:['bufferutil','utf-8-validate'],banner:{js:'import { createRequire as vfCreateRequire } from "node:module"; const require = vfCreateRequire(import.meta.url);'},metafile:true,legalComments:'inline'});
+const result=await build({entryPoints:{server:'packages/mcp-server/src/server.ts','bridge-cli':'packages/mcp-server/src/bridge-cli.ts',doctor:'scripts/doctor.mjs'},outdir:`${root}/server`,outExtension:{'.js':'.mjs'},bundle:true,format:'esm',platform:'node',target:'node22',external:['bufferutil','utf-8-validate'],banner:{js:'import { createRequire as vfCreateRequire } from "node:module"; const require = vfCreateRequire(import.meta.url);'},metafile:true,legalComments:'inline'});
 for(const dir of ['blockbench','assets'])await mkdir(`${root}/${dir}`,{recursive:true});
 await copyFile('dist/voxelflow_studio.js',`${root}/blockbench/voxelflow_studio.js`);
 for(const image of ['adventurer-bag.png','arcane-staff.png'])await copyFile(`docs/evidence/${image}`,`${root}/assets/${image}`);

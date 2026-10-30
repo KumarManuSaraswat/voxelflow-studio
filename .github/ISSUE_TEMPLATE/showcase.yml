@@ -1,0 +1,25 @@
+name: Share a model or prompt
+description: Show what you made and help other artists reproduce it.
+title: "[Showcase]: "
+body:
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Your prompt and result
+      description: Include the prompt, an image, and optionally your editable model. Explain manual changes and unsuccessful attempts too.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions and host
+      description: VoxelFlow, Blockbench, OS, and the local chat app used.
+    validations:
+      required: true
+  - type: textarea
+    id: license
+    attributes:
+      label: Attribution and reuse permission
+      description: State who made the assets and their license. Sharing here does not automatically grant permission to redistribute them in releases.
+    validations:
+      required: true

@@ -6,6 +6,8 @@ Creative prompts go in connected ChatGPT/Codex, which designs a general prop spe
 
 ## Next artist milestones
 
+The immediate focus after 0.3.3 is first-use reliability and useful revisions: independent fresh-account setup reports, in-place editing of named prop parts with approval and Undo, and reproducible Minecraft integration examples. The downloadable diagnostic, prompt gallery, and contributor report forms are now available. Automated package checks on an OS do not establish native Blockbench support there; macOS/Linux still need real editor testing.
+
 These are proposed directions, not delivery promises. Contributions and concrete artist examples help decide priority; discuss substantial work in an issue before implementation.
 
 1. Test with more imported humanoids and add a joint-placement preview; currently mapping requires an existing appropriate hierarchy and does not reposition joints.
