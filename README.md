@@ -26,7 +26,7 @@ The prompt belongs in your AI chat; Blockbench is the model workspace. Bag, Staf
 
 ## What works today
 
-| Capability | Desktop beta 0.3.3 |
+| Capability | Desktop beta 0.3.4 |
 | --- | --- |
 | General props | Up to 128 cubes, 16 named materials, and 32 groups, with rotations and pivots |
 | Texturing | PNG atlas, per-face UVs, native painting, and named recoloring that preserves painted pixels |
@@ -41,7 +41,7 @@ This is an early desktop beta. Structural changes through MCP currently create a
 
 Requires **Node.js 22+**, **Blockbench desktop 5.2+**, and a desktop ChatGPT/Codex host supporting local plugins. Windows is tested; macOS/Linux are not yet verified.
 
-**[Download the desktop beta ZIP](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/download/v0.3.3/voxelflow-desktop-beta-0.3.3.zip)** · [Release notes](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/tag/v0.3.3) · [Full installation guide](plugins/voxelflow-studio/INSTALL.md)
+**[Download the desktop beta ZIP](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/download/v0.3.4/voxelflow-desktop-beta-0.3.4.zip)** · [Release notes](https://github.com/KumarManuSaraswat/voxelflow-studio/releases/tag/v0.3.4) · [Full installation guide](plugins/voxelflow-studio/INSTALL.md)
 
 1. Extract the ZIP. Load its `plugins/voxelflow-studio/blockbench/voxelflow_studio.js` in Blockbench using **File → Plugins → Load Plugin from File**.
 2. Double-click `plugins/voxelflow-studio/Start VoxelFlow.cmd` and keep the companion running.
@@ -65,11 +65,13 @@ Open the editable [adventurer bag](examples/props/bag/adventurer_bag.bbmodel), [
 
 ![An editable arcane staff created in Blockbench with VoxelFlow](docs/evidence/arcane-staff.png)
 
-The beta was checked on **Windows, Blockbench 5.2.2, and Node 24.11.1**, with **84 automated tests**. A real Codex CLI prompt designed a [20-cube lantern](examples/props/lantern/brass_festival_lantern.bbmodel), created after native approval and exported successfully. A fresh desktop extraction works without `node_modules`. Minecraft runtime behavior and ChatGPT account onboarding remain unverified. [Read the evidence](docs/verification.md).
+The beta was checked on **Windows, Blockbench 5.2.2, and Node 24.11.1**, with **84 automated tests** for that live-tested baseline. A real Codex CLI prompt designed a [20-cube lantern](examples/props/lantern/brass_festival_lantern.bbmodel), created after native approval and exported successfully. A fresh desktop extraction works without `node_modules`. Minecraft runtime behavior and ChatGPT account onboarding remain unverified. [Read the evidence](docs/verification.md).
+
+Version 0.3.4 passes **102 automated tests** and fresh-extraction package checks. Its repeated-part and compact-inspection additions have not yet had a new live Blockbench UI run.
 
 ## Develop
 
-The 0.3.4 development build adds [token-efficient modeling](docs/token-efficient-modeling.md): locally expanded repeated parts and compact inspection, with full geometry still available on demand. The published download above remains 0.3.3 until the next release.
+Version 0.3.4 adds [token-efficient modeling](docs/token-efficient-modeling.md): locally expanded repeated parts and compact inspection, with full geometry still available on demand.
 
 ```sh
 git clone https://github.com/KumarManuSaraswat/voxelflow-studio.git
