@@ -23,3 +23,7 @@ Geometry changes through chat currently create a new model tab. For precise in-p
 ## Share an example
 
 Include your prompt, VoxelFlow/Blockbench versions, an image, an editable `.bbmodel`, and anything you changed by hand. Share only your own or appropriately licensed work. A generated model is not automatically a registered Minecraft item, wearable, or playable mob; those require game integration and testing.
+
+## Lower-token modeling
+
+For evenly spaced details, ask: “Use repeated parts and concise inspection while keeping all requested details.” In 0.3.4, the assistant can supply one cube with a repeat count and step; VoxelFlow expands it into editable copies locally. Routine inspection is concise by default. Full coordinates remain available when needed. Actual token savings depend on the design and chat host.

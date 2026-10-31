@@ -28,7 +28,7 @@ export class Workflow {
       }
       switch(tool) {
         case 'get_editor_status':return {ok:true,data:editor.editorStatus()};
-        case 'inspect_project':return {ok:true,data:editor.inspectProject()};
+        case 'inspect_project':return {ok:true,data:editor.inspectProject(args.detail)};
         case 'validate_asset':this.lastReport=validateAsset(editor.captureAsset());this.onChange();return {ok:true,data:this.lastReport};
         case 'get_operation':return {ok:true,data:this.ledger.get(args.operation_id)};
         case 'cancel_operation':{const o=this.ledger.transition(args.operation_id,'cancelled');this.plans.delete(args.operation_id);this.onChange();return {ok:true,data:o};}

@@ -19753,7 +19753,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
   var PropMaterialsSchema = external_exports.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
   var propPosition = external_exports.array(external_exports.number().min(-128).max(128)).length(3).transform((v) => [v[0], v[1], v[2]]);
   var propRotation = external_exports.array(external_exports.number().min(-180).max(180)).length(3).transform((v) => [v[0], v[1], v[2]]);
-  var PropPartSchema = external_exports.object({
+  var propPartFields = {
     name: safeName,
     group: safeName.default("root"),
     from: propPosition.describe("Minimum corner [x,y,z] in pixels. Y is up, front is negative Z."),
@@ -19761,14 +19761,20 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     material: safeName,
     rotation: propRotation.default([0, 0, 0]),
     pivot: propPosition.optional().describe("Rotation pivot in model coordinates; defaults to this cube center.")
-  }).strict().refine((p) => p.to.every((v, i2) => v > p.from[i2]), "Every cube must have positive width, height and depth.");
-  var PropSpecSchema = external_exports.object({
+  };
+  var PropPartSchema = external_exports.object(propPartFields).strict().refine((p) => p.to.every((v, i2) => v > p.from[i2]), "Every cube must have positive width, height and depth.");
+  var repeatSchema = external_exports.object({
+    count: external_exports.number().int().min(2).max(128).describe("Total cubes including the original. Copies are named name_2, name_3, etc."),
+    step: propPosition.describe("Translation per copy [x,y,z]; explicit pivots translate too. Rotation, group and material stay unchanged.")
+  }).strict().refine((r) => r.step.some((v) => v !== 0), "Repeated cubes need a nonzero step.");
+  var compactPartSchema = external_exports.object({ ...propPartFields, repeat: repeatSchema.optional() }).strict();
+  var propSpecFields = {
     name: safeName,
     namespace: safeName.default("voxelflow"),
     description: external_exports.string().min(1).max(600).describe("Artist-facing description of the designed object and requested details."),
-    materials: PropMaterialsSchema,
-    parts: external_exports.array(PropPartSchema).min(1).max(128).describe("Compose ANY block-style prop from editable cubes; not restricted to named presets.")
-  }).strict().superRefine((spec, ctx) => {
+    materials: PropMaterialsSchema
+  };
+  var expandedPropSpecSchema = external_exports.object({ ...propSpecFields, parts: external_exports.array(PropPartSchema).min(1).max(128) }).strict().superRefine((spec, ctx) => {
     const materials = new Set(spec.materials.map((m) => m.name)), names = /* @__PURE__ */ new Set();
     spec.parts.forEach((part, i2) => {
       if (names.has(part.name)) ctx.addIssue({ code: "custom", path: ["parts", i2, "name"], message: "Part names must be unique." });
@@ -19777,13 +19783,32 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     });
     if ((/* @__PURE__ */ new Set(["root", ...spec.parts.map((p) => p.group)])).size > 32) ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 32 named groups." });
   });
+  var PropSpecSchema = external_exports.object({
+    ...propSpecFields,
+    parts: external_exports.array(compactPartSchema).min(1).max(128).describe("Editable cubes. Use repeat for evenly spaced copies to save tokens; the expanded total must be at most 128.")
+  }).strict().transform((spec, ctx) => {
+    if (spec.parts.reduce((n, p) => n + (p.repeat?.count ?? 1), 0) > 128) {
+      ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 128 cubes after repeat expansion." });
+      return external_exports.NEVER;
+    }
+    const parts = spec.parts.flatMap(({ repeat, ...part }) => Array.from({ length: repeat?.count ?? 1 }, (_, i2) => {
+      const move = (v) => v.map((n, axis) => n + i2 * (repeat?.step[axis] ?? 0));
+      return { ...part, name: i2 === 0 ? part.name : `${part.name}_${i2 + 1}`, from: move(part.from), to: move(part.to), ...part.pivot ? { pivot: move(part.pivot) } : {} };
+    }));
+    const parsed = expandedPropSpecSchema.safeParse({ ...spec, parts });
+    if (!parsed.success) {
+      for (const issue2 of parsed.error.issues) ctx.addIssue({ code: "custom", path: issue2.path, message: issue2.message });
+      return external_exports.NEVER;
+    }
+    return parsed.data;
+  });
   var roles = ["root", "torso", "head", "left_upper_arm", "left_lower_arm", "right_upper_arm", "right_lower_arm", "left_upper_leg", "left_lower_leg", "right_upper_leg", "right_lower_leg"];
   var RigMappingSchema = external_exports.object(Object.fromEntries(roles.map((r) => [r, external_exports.string().min(1).max(128)]))).strict();
   var faces = ["north", "east", "south", "west", "up", "down"];
   var requestId = external_exports.string().uuid().describe("Unique operation ID. Reuse the SAME ID and parameters when retrying; never regenerate on a timeout.");
   var toolSchemas = {
     get_editor_status: external_exports.object({}).strict(),
-    inspect_project: external_exports.object({}).strict(),
+    inspect_project: external_exports.object({ detail: external_exports.enum(["summary", "full"]).default("summary").describe("Summary saves tokens and includes counts, groups, materials and warnings. Use full only when coordinates, pivots or UVs are needed.") }).strict(),
     create_model: external_exports.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
     create_prop: external_exports.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
     apply_prop_materials: external_exports.object({ request_id: requestId, materials: PropMaterialsSchema.describe("Update existing named prop materials; omitted materials keep their colors.") }).strict(),
@@ -20985,6 +21010,18 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     return PropSpecSchema.parse({ name: "arcane_staff", description: "Wooden wizard staff with a wrapped grip, gold fittings, forked crown, and violet crystal.", materials: [{ name: "wood", color: "#62402b" }, { name: "leather", color: "#302e42" }, { name: "gold", color: "#e3b34e" }, { name: "crystal", color: "#9e64ee" }, { name: "highlight", color: "#e4ceff" }], parts });
   }
 
+  // packages/core/src/inspection.ts
+  function inspectGeometry(asset, detail = "summary") {
+    if (detail === "full") return {
+      cubes: asset.cubes.length,
+      bones: asset.bones,
+      ...asset.kind === "prop" ? { parts: asset.cubes.map((c) => ({ name: c.name, group: c.bone, from: c.from, to: c.to, pivot: c.origin, rotation: c.rotation, uv: c.faces.north.uv })) } : {}
+    };
+    const counts = new Map(asset.bones.map((b) => [b.name, 0]));
+    for (const cube of asset.cubes) counts.set(cube.bone, (counts.get(cube.bone) ?? 0) + 1);
+    return { cubes: asset.cubes.length, bones: asset.bones.length, groups: [...counts].map(([name, cubes]) => ({ name, cubes })) };
+  }
+
   // packages/core/src/exporters.ts
   var json2 = (v) => strToU8(JSON.stringify(v, null, 2) + "\n");
   var rotation = (v) => [-v[0], -v[1], v[2]];
@@ -21144,7 +21181,7 @@ Minecraft runtime compatibility is NOT verified.
   }
   function editorStatus() {
     const p = typeof Project !== "undefined" && Project ? Project : void 0;
-    return { connected: true, blockbenchVersion: Blockbench.version, project: p ? { id: p.uuid, name: p.name, format: Format.id, kind: identity().kind } : null, supported: { templates: ["robot", "bag", "staff"], customProps: { tool: "create_prop", maxParts: 128, maxMaterials: 16, promptLocation: "ChatGPT or Codex" }, targets: ["bedrock"], animations: ["idle", "walk", "attack"], approvalRequired: true }, undoAvailable: p ? Undo.history[Undo.index - 1] === lastEdits.get(p) : false };
+    return { connected: true, blockbenchVersion: Blockbench.version, project: p ? { id: p.uuid, name: p.name, format: Format.id, kind: identity().kind } : null, supported: { templates: ["robot", "bag", "staff"], customProps: { tool: "create_prop", maxParts: 128, maxMaterials: 16, repeatParts: true, inspectionDetails: ["summary", "full"], promptLocation: "ChatGPT or Codex" }, targets: ["bedrock"], animations: ["idle", "walk", "attack"], approvalRequired: true }, undoAvailable: p ? Undo.history[Undo.index - 1] === lastEdits.get(p) : false };
   }
   function sceneStamp() {
     if (typeof Project === "undefined" || !Project) return "no-project";
@@ -21216,10 +21253,10 @@ Minecraft runtime compatibility is NOT verified.
     });
     return { ...identity(), bones, cubes, textures, animations, mapping, unsupported: [...new Set(unsupported)] };
   }
-  function inspectProject() {
+  function inspectProject(detail = "summary") {
     if (typeof Project === "undefined" || !Project) return { project: null, message: "Create a robot to begin." };
     const a = captureAsset();
-    return { project: { id: Project.uuid, name: Project.name, format: Format.id, kind: a.kind }, identifier: `${a.namespace}:${a.name}`, geometry: { cubes: a.cubes.length, bones: a.bones, ...a.kind === "prop" ? { parts: a.cubes.map((c) => ({ name: c.name, group: c.bone, from: c.from, to: c.to, pivot: c.origin, rotation: c.rotation, uv: c.faces.north.uv })) } : {} }, materials: a.kind === "prop" ? getPropMaterials() : void 0, mapping: a.mapping, rigDetection: a.kind === "prop" ? null : detectRig(a.bones), textures: a.textures.map(({ png, ...t }) => ({ ...t, pngBytes: png.length })), animations: a.animations.map((c) => ({ name: c.name, loop: c.loop, length: c.length, tracks: c.tracks.length, keyframes: c.tracks.reduce((n, t) => n + t.frames.length, 0) })), unsupported: a.unsupported };
+    return { detail, project: { id: Project.uuid, name: Project.name, format: Format.id, kind: a.kind }, identifier: `${a.namespace}:${a.name}`, geometry: inspectGeometry(a, detail), materials: a.kind === "prop" ? getPropMaterials() : void 0, mapping: a.mapping, rigDetection: a.kind === "prop" ? null : detectRig(a.bones), textures: a.textures.map(({ png, ...t }) => ({ ...t, pngBytes: png.length })), animations: a.animations.map((c) => ({ name: c.name, loop: c.loop, length: c.length, tracks: c.tracks.length, keyframes: c.tracks.reduce((n, t) => n + t.frames.length, 0) })), unsupported: a.unsupported };
   }
   function finish(label, aspects) {
     const entry = Undo.finishEdit(`VoxelFlow: ${label}`, aspects);
@@ -21466,7 +21503,7 @@ Minecraft runtime compatibility is NOT verified.
           case "get_editor_status":
             return { ok: true, data: editorStatus() };
           case "inspect_project":
-            return { ok: true, data: inspectProject() };
+            return { ok: true, data: inspectProject(args.detail) };
           case "validate_asset":
             this.lastReport = validateAsset(captureAsset());
             this.onChange();
@@ -22019,7 +22056,7 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
     author: "VoxelFlow Studio contributors",
     description: "Prompt-designed Minecraft props and animated robots: editable geometry, named materials, quality checks and Bedrock exports. Connect ChatGPT/Codex through MCP or use offline examples.",
     icon: "smart_toy",
-    version: "0.3.3",
+    version: "0.3.4",
     min_version: "5.2.0",
     variant: "desktop",
     tags: ["Minecraft: Bedrock Edition", "Animation", "Utility"],

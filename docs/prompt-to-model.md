@@ -22,6 +22,8 @@ These prompts require the MCP connection described in [MCP setup](mcp-integratio
 
 ## The prop contract
 
+For repeated details and smaller inspection responses, see [token-efficient modeling](token-efficient-modeling.md). The optional `repeat` field expands locally into ordinary cubes; all limits apply to the expanded model.
+
 `create_prop` accepts a UUID `request_id` and this structure:
 
 ```json

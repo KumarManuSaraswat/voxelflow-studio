@@ -49,6 +49,8 @@ try{
   assert(pairing,'Companion did not start');assert.equal(pairing.port,port);assert(!logs.includes(pairing.token),'Desktop launcher logged its credential');
   await client.connect(new StdioClientTransport({command:process.execPath,args:config.args.map(a=>a.replace('${PLUGIN_ROOT}',root)),cwd:temp,env,stderr:'pipe'}));
   const list=await client.listTools();assert.equal(list.tools.length,14);
+  assert.equal(list.tools.find(t=>t.name==='inspect_project').inputSchema.properties.detail.default,'summary');
+  assert.equal(list.tools.find(t=>t.name==='create_prop').inputSchema.properties.spec.properties.parts.items.properties.repeat.properties.count.maximum,128);
   const prompts=await client.listPrompts();assert.equal(prompts.prompts.length,2);
   const status=await client.callTool({name:'get_editor_status',arguments:{}});assert.deepEqual(status.structuredContent.data.connected,false);
   const bad=await client.callTool({name:'create_prop',arguments:{request_id:crypto.randomUUID(),spec:{}}});assert.equal(bad.isError,true);

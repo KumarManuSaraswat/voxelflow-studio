@@ -1,6 +1,6 @@
 {
   "name": "voxelflow-studio",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -24,7 +24,8 @@
     "doctor": "node scripts/doctor.mjs",
     "verify:live-export": "tsx scripts/verify-live-export.ts",
     "package": "node scripts/package.mjs",
-    "check": "npm run typecheck && npm test && npm run build && npm run examples && npm run examples:props"
+    "check": "npm run typecheck && npm test && npm run build && npm run examples && npm run examples:props",
+    "measure:payloads": "tsx scripts/measure-payloads.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",

@@ -69,6 +69,8 @@ The beta was checked on **Windows, Blockbench 5.2.2, and Node 24.11.1**, with **
 
 ## Develop
 
+The 0.3.4 development build adds [token-efficient modeling](docs/token-efficient-modeling.md): locally expanded repeated parts and compact inspection, with full geometry still available on demand. The published download above remains 0.3.3 until the next release.
+
 ```sh
 git clone https://github.com/KumarManuSaraswat/voxelflow-studio.git
 cd voxelflow-studio
@@ -85,6 +87,7 @@ Load `dist/voxelflow_studio.js` in Blockbench. Run `npm run bridge`, then connec
 | `npm run package:desktop` | Build both standalone desktop ZIPs |
 | `npm run verify:desktop` | Check a fresh extraction and bundled MCP startup |
 | `npm run doctor` | Read-only local package, MCP discovery, and editor preflight |
+| `npm run measure:payloads` | Compare explicit/compact JSON sizes; these are not billing estimates |
 | `npm run package` | Package the source, builds, examples, and community docs |
 
 [Architecture](docs/architecture.md) · [MCP setup](docs/mcp-integration.md) · [Prompt workflow](docs/prompt-to-model.md) · [Manual checks](docs/manual-smoke-test.md) · [Support](SUPPORT.md)

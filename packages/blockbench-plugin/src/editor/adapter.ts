@@ -1,5 +1,6 @@
 import { Asset, AssetSpec, Clip, CubeData, FaceName, faces, Palette, PropMaterial, PropMaterialsSchema, PropSpec, RigMapping, Role, roles, V3 } from '../../../core/src/schema';
 import {generateProp,propAtlasPixels,recolorProp} from '../../../core/src/props';
+import {inspectGeometry} from '../../../core/src/inspection';
 import { detectRig, generateRobot } from '../../../core/src/modeling';
 import { generateAnimations } from '../../../core/src/animation';
 import { validateAsset } from '../../../core/src/validation';
@@ -19,7 +20,7 @@ export function getPropMaterials():PropMaterial[]{const t=Texture.all.find(t=>(t
 export function initializeProperties() {return [new Property(ModelProject,'string','voxelflow_meta',{default:''}),new Property(Group,'string','voxelflow_role',{default:''}),new Property(Texture,'string','voxelflow_palette',{default:''}),new Property(Texture,'string','voxelflow_prop_palette',{default:''})];}
 export function editorStatus() {
   const p=typeof Project!=='undefined'&&Project?Project:undefined;
-  return {connected:true,blockbenchVersion:Blockbench.version,project:p?{id:p.uuid,name:p.name,format:Format.id,kind:identity().kind}:null,supported:{templates:['robot','bag','staff'],customProps:{tool:'create_prop',maxParts:128,maxMaterials:16,promptLocation:'ChatGPT or Codex'},targets:['bedrock'],animations:['idle','walk','attack'],approvalRequired:true},undoAvailable:p?Undo.history[Undo.index-1]===lastEdits.get(p):false};
+  return {connected:true,blockbenchVersion:Blockbench.version,project:p?{id:p.uuid,name:p.name,format:Format.id,kind:identity().kind}:null,supported:{templates:['robot','bag','staff'],customProps:{tool:'create_prop',maxParts:128,maxMaterials:16,repeatParts:true,inspectionDetails:['summary','full'],promptLocation:'ChatGPT or Codex'},targets:['bedrock'],animations:['idle','walk','attack'],approvalRequired:true},undoAvailable:p?Undo.history[Undo.index-1]===lastEdits.get(p):false};
 }
 export function sceneStamp() {
   if(typeof Project==='undefined'||!Project)return 'no-project';
@@ -80,10 +81,10 @@ export function captureAsset():Asset {
   });
   return {...identity(),bones,cubes,textures,animations,mapping,unsupported:[...new Set(unsupported)]};
 }
-export function inspectProject() {
+export function inspectProject(detail:'summary'|'full'='summary') {
   if(typeof Project==='undefined'||!Project)return {project:null,message:'Create a robot to begin.'};
   const a=captureAsset();
-  return {project:{id:Project.uuid,name:Project.name,format:Format.id,kind:a.kind},identifier:`${a.namespace}:${a.name}`,geometry:{cubes:a.cubes.length,bones:a.bones,...(a.kind==='prop'?{parts:a.cubes.map(c=>({name:c.name,group:c.bone,from:c.from,to:c.to,pivot:c.origin,rotation:c.rotation,uv:c.faces.north.uv}))}:{})},materials:a.kind==='prop'?getPropMaterials():undefined,mapping:a.mapping,rigDetection:a.kind==='prop'?null:detectRig(a.bones),textures:a.textures.map(({png,...t})=>({...t,pngBytes:png.length})),animations:a.animations.map(c=>({name:c.name,loop:c.loop,length:c.length,tracks:c.tracks.length,keyframes:c.tracks.reduce((n,t)=>n+t.frames.length,0)})),unsupported:a.unsupported};
+  return {detail,project:{id:Project.uuid,name:Project.name,format:Format.id,kind:a.kind},identifier:`${a.namespace}:${a.name}`,geometry:inspectGeometry(a,detail),materials:a.kind==='prop'?getPropMaterials():undefined,mapping:a.mapping,rigDetection:a.kind==='prop'?null:detectRig(a.bones),textures:a.textures.map(({png,...t})=>({...t,pngBytes:png.length})),animations:a.animations.map(c=>({name:c.name,loop:c.loop,length:c.length,tracks:c.tracks.length,keyframes:c.tracks.reduce((n,t)=>n+t.frames.length,0)})),unsupported:a.unsupported};
 }
 function finish(label:string,aspects:UndoAspects){const entry=Undo.finishEdit(`VoxelFlow: ${label}`,aspects);lastEdits.set(Project,entry);Canvas.updateAll();}
 function writePixels(texture:VFTexture,pixels:Uint8Array,width=64,height=16) {

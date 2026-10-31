@@ -39,7 +39,7 @@ var PropMaterialSchema = z.object({ name: safeName, color: z.string().regex(/^#[
 var PropMaterialsSchema = z.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
 var propPosition = z.array(z.number().min(-128).max(128)).length(3).transform((v) => [v[0], v[1], v[2]]);
 var propRotation = z.array(z.number().min(-180).max(180)).length(3).transform((v) => [v[0], v[1], v[2]]);
-var PropPartSchema = z.object({
+var propPartFields = {
   name: safeName,
   group: safeName.default("root"),
   from: propPosition.describe("Minimum corner [x,y,z] in pixels. Y is up, front is negative Z."),
@@ -47,14 +47,20 @@ var PropPartSchema = z.object({
   material: safeName,
   rotation: propRotation.default([0, 0, 0]),
   pivot: propPosition.optional().describe("Rotation pivot in model coordinates; defaults to this cube center.")
-}).strict().refine((p) => p.to.every((v, i) => v > p.from[i]), "Every cube must have positive width, height and depth.");
-var PropSpecSchema = z.object({
+};
+var PropPartSchema = z.object(propPartFields).strict().refine((p) => p.to.every((v, i) => v > p.from[i]), "Every cube must have positive width, height and depth.");
+var repeatSchema = z.object({
+  count: z.number().int().min(2).max(128).describe("Total cubes including the original. Copies are named name_2, name_3, etc."),
+  step: propPosition.describe("Translation per copy [x,y,z]; explicit pivots translate too. Rotation, group and material stay unchanged.")
+}).strict().refine((r) => r.step.some((v) => v !== 0), "Repeated cubes need a nonzero step.");
+var compactPartSchema = z.object({ ...propPartFields, repeat: repeatSchema.optional() }).strict();
+var propSpecFields = {
   name: safeName,
   namespace: safeName.default("voxelflow"),
   description: z.string().min(1).max(600).describe("Artist-facing description of the designed object and requested details."),
-  materials: PropMaterialsSchema,
-  parts: z.array(PropPartSchema).min(1).max(128).describe("Compose ANY block-style prop from editable cubes; not restricted to named presets.")
-}).strict().superRefine((spec, ctx) => {
+  materials: PropMaterialsSchema
+};
+var expandedPropSpecSchema = z.object({ ...propSpecFields, parts: z.array(PropPartSchema).min(1).max(128) }).strict().superRefine((spec, ctx) => {
   const materials = new Set(spec.materials.map((m) => m.name)), names = /* @__PURE__ */ new Set();
   spec.parts.forEach((part, i) => {
     if (names.has(part.name)) ctx.addIssue({ code: "custom", path: ["parts", i, "name"], message: "Part names must be unique." });
@@ -63,12 +69,31 @@ var PropSpecSchema = z.object({
   });
   if ((/* @__PURE__ */ new Set(["root", ...spec.parts.map((p) => p.group)])).size > 32) ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 32 named groups." });
 });
+var PropSpecSchema = z.object({
+  ...propSpecFields,
+  parts: z.array(compactPartSchema).min(1).max(128).describe("Editable cubes. Use repeat for evenly spaced copies to save tokens; the expanded total must be at most 128.")
+}).strict().transform((spec, ctx) => {
+  if (spec.parts.reduce((n, p) => n + (p.repeat?.count ?? 1), 0) > 128) {
+    ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 128 cubes after repeat expansion." });
+    return z.NEVER;
+  }
+  const parts = spec.parts.flatMap(({ repeat, ...part }) => Array.from({ length: repeat?.count ?? 1 }, (_, i) => {
+    const move = (v) => v.map((n, axis) => n + i * (repeat?.step[axis] ?? 0));
+    return { ...part, name: i === 0 ? part.name : `${part.name}_${i + 1}`, from: move(part.from), to: move(part.to), ...part.pivot ? { pivot: move(part.pivot) } : {} };
+  }));
+  const parsed = expandedPropSpecSchema.safeParse({ ...spec, parts });
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) ctx.addIssue({ code: "custom", path: issue.path, message: issue.message });
+    return z.NEVER;
+  }
+  return parsed.data;
+});
 var roles = ["root", "torso", "head", "left_upper_arm", "left_lower_arm", "right_upper_arm", "right_lower_arm", "left_upper_leg", "left_lower_leg", "right_upper_leg", "right_lower_leg"];
 var RigMappingSchema = z.object(Object.fromEntries(roles.map((r) => [r, z.string().min(1).max(128)]))).strict();
 var requestId = z.string().uuid().describe("Unique operation ID. Reuse the SAME ID and parameters when retrying; never regenerate on a timeout.");
 var toolSchemas = {
   get_editor_status: z.object({}).strict(),
-  inspect_project: z.object({}).strict(),
+  inspect_project: z.object({ detail: z.enum(["summary", "full"]).default("summary").describe("Summary saves tokens and includes counts, groups, materials and warnings. Use full only when coordinates, pivots or UVs are needed.") }).strict(),
   create_model: z.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
   create_prop: z.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
   apply_prop_materials: z.object({ request_id: requestId, materials: PropMaterialsSchema.describe("Update existing named prop materials; omitted materials keep their colors.") }).strict(),

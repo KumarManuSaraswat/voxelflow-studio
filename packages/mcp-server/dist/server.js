@@ -34,7 +34,7 @@ var PropMaterialSchema = z.object({ name: safeName, color: z.string().regex(/^#[
 var PropMaterialsSchema = z.array(PropMaterialSchema).min(1).max(16).refine((a) => new Set(a.map((m) => m.name)).size === a.length, "Material names must be unique.");
 var propPosition = z.array(z.number().min(-128).max(128)).length(3).transform((v) => [v[0], v[1], v[2]]);
 var propRotation = z.array(z.number().min(-180).max(180)).length(3).transform((v) => [v[0], v[1], v[2]]);
-var PropPartSchema = z.object({
+var propPartFields = {
   name: safeName,
   group: safeName.default("root"),
   from: propPosition.describe("Minimum corner [x,y,z] in pixels. Y is up, front is negative Z."),
@@ -42,14 +42,20 @@ var PropPartSchema = z.object({
   material: safeName,
   rotation: propRotation.default([0, 0, 0]),
   pivot: propPosition.optional().describe("Rotation pivot in model coordinates; defaults to this cube center.")
-}).strict().refine((p) => p.to.every((v, i) => v > p.from[i]), "Every cube must have positive width, height and depth.");
-var PropSpecSchema = z.object({
+};
+var PropPartSchema = z.object(propPartFields).strict().refine((p) => p.to.every((v, i) => v > p.from[i]), "Every cube must have positive width, height and depth.");
+var repeatSchema = z.object({
+  count: z.number().int().min(2).max(128).describe("Total cubes including the original. Copies are named name_2, name_3, etc."),
+  step: propPosition.describe("Translation per copy [x,y,z]; explicit pivots translate too. Rotation, group and material stay unchanged.")
+}).strict().refine((r) => r.step.some((v) => v !== 0), "Repeated cubes need a nonzero step.");
+var compactPartSchema = z.object({ ...propPartFields, repeat: repeatSchema.optional() }).strict();
+var propSpecFields = {
   name: safeName,
   namespace: safeName.default("voxelflow"),
   description: z.string().min(1).max(600).describe("Artist-facing description of the designed object and requested details."),
-  materials: PropMaterialsSchema,
-  parts: z.array(PropPartSchema).min(1).max(128).describe("Compose ANY block-style prop from editable cubes; not restricted to named presets.")
-}).strict().superRefine((spec, ctx) => {
+  materials: PropMaterialsSchema
+};
+var expandedPropSpecSchema = z.object({ ...propSpecFields, parts: z.array(PropPartSchema).min(1).max(128) }).strict().superRefine((spec, ctx) => {
   const materials = new Set(spec.materials.map((m) => m.name)), names = /* @__PURE__ */ new Set();
   spec.parts.forEach((part, i) => {
     if (names.has(part.name)) ctx.addIssue({ code: "custom", path: ["parts", i, "name"], message: "Part names must be unique." });
@@ -58,12 +64,31 @@ var PropSpecSchema = z.object({
   });
   if ((/* @__PURE__ */ new Set(["root", ...spec.parts.map((p) => p.group)])).size > 32) ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 32 named groups." });
 });
+var PropSpecSchema = z.object({
+  ...propSpecFields,
+  parts: z.array(compactPartSchema).min(1).max(128).describe("Editable cubes. Use repeat for evenly spaced copies to save tokens; the expanded total must be at most 128.")
+}).strict().transform((spec, ctx) => {
+  if (spec.parts.reduce((n, p) => n + (p.repeat?.count ?? 1), 0) > 128) {
+    ctx.addIssue({ code: "custom", path: ["parts"], message: "Use at most 128 cubes after repeat expansion." });
+    return z.NEVER;
+  }
+  const parts = spec.parts.flatMap(({ repeat, ...part }) => Array.from({ length: repeat?.count ?? 1 }, (_, i) => {
+    const move = (v) => v.map((n, axis) => n + i * (repeat?.step[axis] ?? 0));
+    return { ...part, name: i === 0 ? part.name : `${part.name}_${i + 1}`, from: move(part.from), to: move(part.to), ...part.pivot ? { pivot: move(part.pivot) } : {} };
+  }));
+  const parsed = expandedPropSpecSchema.safeParse({ ...spec, parts });
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) ctx.addIssue({ code: "custom", path: issue.path, message: issue.message });
+    return z.NEVER;
+  }
+  return parsed.data;
+});
 var roles = ["root", "torso", "head", "left_upper_arm", "left_lower_arm", "right_upper_arm", "right_lower_arm", "left_upper_leg", "left_lower_leg", "right_upper_leg", "right_lower_leg"];
 var RigMappingSchema = z.object(Object.fromEntries(roles.map((r) => [r, z.string().min(1).max(128)]))).strict();
 var requestId = z.string().uuid().describe("Unique operation ID. Reuse the SAME ID and parameters when retrying; never regenerate on a timeout.");
 var toolSchemas = {
   get_editor_status: z.object({}).strict(),
-  inspect_project: z.object({}).strict(),
+  inspect_project: z.object({ detail: z.enum(["summary", "full"]).default("summary").describe("Summary saves tokens and includes counts, groups, materials and warnings. Use full only when coordinates, pivots or UVs are needed.") }).strict(),
   create_model: z.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
   create_prop: z.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
   apply_prop_materials: z.object({ request_id: requestId, materials: PropMaterialsSchema.describe("Update existing named prop materials; omitted materials keep their colors.") }).strict(),
@@ -154,9 +179,9 @@ async function readConfig() {
 // packages/mcp-server/src/server.ts
 var descriptions = {
   get_editor_status: "Read live Blockbench connection, project, version and format. Returns connected:false when unavailable; never simulates an editor.",
-  inspect_project: "Read actual geometry, bone mapping, textures and native keyframe summaries of the active Blockbench project.",
+  inspect_project: "Read the live project. Default summary returns counts, groups, materials, rig mapping, texture/animation summaries and warnings with fewer tokens. Request detail:full only for cube coordinates, pivots, UVs or bone transforms.",
   create_model: "Propose an editable humanoid robot with palette, articulated rig, and idle/walk/attack clips in a NEW Bedrock project tab. Translate natural language into AssetSpec; only robot/bedrock is implemented. Returns pending_approval. Ask the artist to approve in Blockbench, then poll get_operation. Eye color is bright cyan, not an emissive shader.",
-  create_prop: "Create a Minecraft-style prop from the user\u2019s natural-language request: bags/backpacks, staffs, swords, shields, furniture, chests, lanterns, or other objects representable by cubes. YOU design a structured PropSpec with 1\u2013128 named cube parts and 1\u201316 named hex-color materials. There is NO category whitelist or keyword parser. Y is up, front is negative Z, coordinates/pivots must be -128..128 pixels, from < to, rotations in degrees. Organize related parts with group names; include recognizable silhouette and details. This tool builds real geometry, part groups, PNG atlas and UVs in a NEW Blockbench tab. It creates a static prop, not a humanoid or a registered game item. Returns pending_approval; wait for the artist to approve in Blockbench, then poll get_operation. Do not claim emissive materials or gameplay behavior.",
+  create_prop: "Create a Minecraft-style prop from the user\u2019s natural-language request: bags/backpacks, staffs, swords, shields, furniture, chests, lanterns, or other objects representable by cubes. YOU design a structured PropSpec with 1\u2013128 named cube parts and 1\u201316 named hex-color materials. There is NO category whitelist or keyword parser. Y is up, front is negative Z, coordinates/pivots must be -128..128 pixels, from < to, rotations in degrees. Save tokens with optional part.repeat {count,step:[x,y,z]} for evenly spaced copies (count includes original; names name_2, name_3; pivots translate). Max 128 cubes AFTER expansion. Omit default group/rotation/namespace when appropriate. Organize related parts with group names; include recognizable silhouette and details. This tool builds real geometry, part groups, PNG atlas and UVs in a NEW Blockbench tab. It creates a static prop, not a humanoid or a registered game item. Returns pending_approval; wait for the artist to approve in Blockbench, then poll get_operation. Do not claim emissive materials or gameplay behavior.",
   apply_prop_materials: "Propose changing named colors on an existing VoxelFlow prop. First inspect_project to read its actual material names. Supply only the names/colors to update; preserve other materials, painted pixels and geometry. Requires Blockbench approval.",
   apply_materials: "Propose recoloring the VoxelFlow atlas while preserving pixels painted by the artist. Does not rebuild geometry or animations. Requires Blockbench approval.",
   generate_rig: "Propose a body-part mapping for an existing humanoid hierarchy. Exact/alias detection is conservative; provide all 11 mapped bone names when detection is ambiguous. Does not invent joints or move imported geometry. Requires approval and a valid existing hierarchy.",
@@ -168,7 +193,7 @@ var descriptions = {
   cancel_operation: "Cancel a pending approval without changing the scene. Running exports must be cancelled in the native Save dialog.",
   preview_animation: "Select and play or stop an existing idle, walk, or attack clip in the real Blockbench animation timeline. Does not create or edit keyframes."
 };
-var server = new McpServer({ name: "voxelflow-studio", version: "0.3.3" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. You may design new object types: the generic cube blueprint is not limited to presets. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
+var server = new McpServer({ name: "voxelflow-studio", version: "0.3.4" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. Keep plans brief; do not echo the JSON blueprint in chat. Use repeat for repeated prop parts and summary inspection for routine checks/recoloring; full inspection only for geometry analysis. Never reduce requested detail to save tokens. You may design new object types: the generic cube blueprint is not limited to presets. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
 for (const name of toolNames) {
   const mutation = mutationNames.includes(name);
   server.registerTool(name, {
@@ -192,6 +217,6 @@ for (const name of toolNames) {
 server.registerPrompt("create_animated_robot", { description: "Guided VoxelFlow robot pipeline", argsSchema: { brief: z2.string().max(2e3) } }, ({ brief }) => ({ messages: [{ role: "user", content: { type: "text", text: `Use VoxelFlow Studio to create this character: ${brief}
 Inspect editor status. Translate the brief into create_model AssetSpec using template robot and target bedrock; supported controls are height 16\u201364, build balanced/slender/heavy, detail simple/detailed, palette primary/secondary/eyes hex colors, and idle/walk/attack speed 0.25\u20133 and intensity 0.1\u20131.5. Present the plan. Submit once with a UUID request_id, then ask me to approve in Blockbench. Poll get_operation until applied. Preview walk and attack, validate, and propose export. Wait for my export approval and save selection. Explain unsupported requests clearly.` } }] }));
 server.registerPrompt("create_minecraft_asset", { description: "Turn a prompt into an editable Minecraft prop or animated robot", argsSchema: { brief: z2.string().min(1).max(3e3) } }, ({ brief }) => ({ messages: [{ role: "user", content: { type: "text", text: `Create this Minecraft-style model with VoxelFlow: ${brief}
-Check editor status. For a prop, design a PropSpec for create_prop: a recognizable silhouette, useful named parts/groups, up to 128 cubes, and up to 16 named hex-color materials. Use pixels, Y up, front negative Z, positive dimensions, and finite coordinates within -128..128. Include requested details such as straps, buckles, pockets, handles, crystal facets or fittings. This is a general geometry builder, not a fixed preset selector. Use create_model only for the robot character template. Explain the plan, submit one UUID request, wait for native approval, and poll until applied. Inspect and validate the live result. Propose export only when requested. Do not claim automatic game item registration or unimplemented effects.` } }] }));
+Check editor status. For a prop, design a PropSpec for create_prop: a recognizable silhouette, useful named parts/groups, up to 128 cubes, and up to 16 named hex-color materials. Use pixels, Y up, front negative Z, positive dimensions, and finite coordinates within -128..128. Include requested details such as straps, buckles, pockets, handles, crystal facets or fittings. Save tokens: use optional part.repeat {count,step:[x,y,z]} for evenly spaced copies (128 expanded cubes maximum), omit default values, and keep the plan brief without echoing JSON. Inspect with the default summary; request detail:full only for geometry analysis. Preserve requested details. This is a general geometry builder, not a fixed preset selector. Use create_model only for the robot character template. Explain the plan, submit one UUID request, wait for native approval, and poll until applied. Inspect and validate the live result. Propose export only when requested. Do not claim automatic game item registration or unimplemented effects.` } }] }));
 await server.connect(new StdioServerTransport());
 //# sourceMappingURL=server.js.map

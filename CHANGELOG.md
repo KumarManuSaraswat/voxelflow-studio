@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.4 — Token-efficient modeling
+
+- Expand repeated prop cubes locally with optional `repeat: {count, step}` instructions, preserving ordinary editable geometry and approval.
+- Default project inspection to a compact summary; request `detail: "full"` for coordinates, pivots, UVs and bone transforms.
+- Teach the modeling skill to omit default values and avoid echoing blueprints in chat without reducing requested detail.
+- Add geometry equivalence, expanded-limit, retry and MCP regression tests and a reproducible payload measurement command.
+
+See [release notes](docs/releases/0.3.4.md).
+
 ## 0.3.3 — First-use diagnostics and community contributions
 
 - Bundle read-only diagnostics and place Windows launchers beside START-HERE.md in the desktop download.
