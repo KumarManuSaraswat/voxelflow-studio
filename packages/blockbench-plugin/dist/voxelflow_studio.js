@@ -19806,11 +19806,27 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
   var RigMappingSchema = external_exports.object(Object.fromEntries(roles.map((r) => [r, external_exports.string().min(1).max(128)]))).strict();
   var faces = ["north", "east", "south", "west", "up", "down"];
   var requestId = external_exports.string().uuid().describe("Unique operation ID. Reuse the SAME ID and parameters when retrying; never regenerate on a timeout.");
+  var editorId = external_exports.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Use the exact Blockbench id returned by inspection.");
+  var PartEditSchema = external_exports.object({
+    part_id: editorId.describe("Exact cube id from inspect_project with detail:full; never guess from a name."),
+    move: propPosition.optional().describe("Relative translation in model coordinates. Translates both corners and the pivot. Cannot combine with from/to/pivot."),
+    from: propPosition.optional().describe("New minimum corner; supply together with to. Existing pivot stays unless explicitly supplied."),
+    to: propPosition.optional().describe("New maximum corner; supply together with from."),
+    rotation: propRotation.optional().describe("Absolute cube rotation in degrees. Does not change the parent bone or animation."),
+    pivot: propPosition.optional().describe("Absolute cube rotation pivot. Does not reposition a bone."),
+    material: safeName.optional().describe("Assign an existing VoxelFlow prop material to this cube\u2019s visible faces. Replaces their UV mapping; does not recolor the shared texture.")
+  }).strict().superRefine((p, ctx) => {
+    if (!["move", "from", "to", "rotation", "pivot", "material"].some((k) => p[k] !== void 0)) ctx.addIssue({ code: "custom", message: "Supply at least one change." });
+    if (p.from === void 0 !== (p.to === void 0)) ctx.addIssue({ code: "custom", message: "Supply from and to together." });
+    if (p.move && (p.from || p.to || p.pivot)) ctx.addIssue({ code: "custom", message: "Move cannot be combined with corners or pivot." });
+  });
+  var PartEditsSchema = external_exports.array(PartEditSchema).min(1).max(128).refine((edits) => new Set(edits.map((e) => e.part_id)).size === edits.length, "Edit each part once per request.");
   var toolSchemas = {
     get_editor_status: external_exports.object({}).strict(),
     inspect_project: external_exports.object({ detail: external_exports.enum(["summary", "full"]).default("summary").describe("Summary saves tokens and includes counts, groups, materials and warnings. Use full only when coordinates, pivots or UVs are needed.") }).strict(),
     create_model: external_exports.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
     create_prop: external_exports.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
+    edit_parts: external_exports.object({ request_id: requestId, project_id: editorId.describe("Active project id returned by inspection; prevents edits to a different tab."), edits: PartEditsSchema }).strict(),
     apply_prop_materials: external_exports.object({ request_id: requestId, materials: PropMaterialsSchema.describe("Update existing named prop materials; omitted materials keep their colors.") }).strict(),
     apply_materials: external_exports.object({ request_id: requestId, palette: PaletteSchema }).strict(),
     generate_rig: external_exports.object({ request_id: requestId, mapping: RigMappingSchema.optional() }).strict(),
@@ -19823,7 +19839,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     preview_animation: external_exports.object({ clip: ClipName, playing: external_exports.boolean().default(true) }).strict()
   };
   var toolNames = Object.keys(toolSchemas);
-  var mutationNames = ["create_model", "create_prop", "apply_prop_materials", "apply_materials", "generate_rig", "generate_animations", "export_asset", "undo_last_change"];
+  var mutationNames = ["create_model", "create_prop", "edit_parts", "apply_prop_materials", "apply_materials", "generate_rig", "generate_animations", "export_asset", "undo_last_change"];
   function parseTool(name, args) {
     if (!Object.hasOwn(toolSchemas, name)) throw new Error(`Unknown operation: ${name}`);
     return { name, args: toolSchemas[name].parse(args) };
@@ -21015,11 +21031,43 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     if (detail === "full") return {
       cubes: asset.cubes.length,
       bones: asset.bones,
-      ...asset.kind === "prop" ? { parts: asset.cubes.map((c) => ({ name: c.name, group: c.bone, from: c.from, to: c.to, pivot: c.origin, rotation: c.rotation, uv: c.faces.north.uv })) } : {}
+      parts: asset.cubes.map((c) => ({ id: c.id, name: c.name, group: c.bone, from: c.from, to: c.to, pivot: c.origin, rotation: c.rotation, uv: c.faces.north.uv, boxUv: c.boxUv ?? false }))
     };
     const counts = new Map(asset.bones.map((b) => [b.name, 0]));
     for (const cube of asset.cubes) counts.set(cube.bone, (counts.get(cube.bone) ?? 0) + 1);
     return { cubes: asset.cubes.length, bones: asset.bones.length, groups: [...counts].map(([name, cubes]) => ({ name, cubes })) };
+  }
+
+  // packages/core/src/part-edits.ts
+  function planPartEdits(cubes, input2, materials = [], atlasId) {
+    const edits = PartEditsSchema.parse(input2);
+    return edits.map((edit) => {
+      const matches = cubes.filter((c) => c.id === edit.part_id);
+      if (matches.length !== 1) throw Error(`Part ${edit.part_id} is missing or ambiguous. Inspect the current project again.`);
+      const before = matches[0];
+      const shift = (v) => v.map((n, i2) => n + (edit.move?.[i2] ?? 0));
+      const from = edit.move ? shift(before.from) : [...edit.from ?? before.from];
+      const to = edit.move ? shift(before.to) : [...edit.to ?? before.to];
+      const origin = edit.move ? shift(before.origin) : [...edit.pivot ?? before.origin];
+      const rotation2 = [...edit.rotation ?? before.rotation];
+      if ([from, to, origin].some((v) => v.some((n) => !Number.isFinite(n) || n < -128 || n > 128))) throw Error(`${before.name}: corners and pivot must stay within -128..128.`);
+      if (!to.every((n, i2) => n > from[i2])) throw Error(`${before.name}: every dimension must be positive.`);
+      if (before.boxUv && to.some((n, i2) => Math.abs(n - from[i2] - (before.to[i2] - before.from[i2])) > 1e-9)) throw Error(`${before.name}: resizing box-UV cubes would change their texture mapping. Convert a copy to per-face UVs in Blockbench first.`);
+      if (rotation2.some((n) => !Number.isFinite(n) || n < -180 || n > 180)) throw Error(`${before.name}: rotation must stay within -180..180.`);
+      const faceUpdates = {};
+      if (edit.material !== void 0) {
+        const index = materials.findIndex((m) => m.name === edit.material);
+        if (index < 0 || !atlasId) throw Error("Assign an existing named material from a VoxelFlow prop. Inspect materials first.");
+        if (before.boxUv) throw Error(`${before.name}: material assignment requires per-face UVs. Convert a copy to per-face UVs in Blockbench first.`);
+        for (const side of Object.keys(before.faces)) {
+          const face = before.faces[side];
+          if (face.texture !== null) faceUpdates[side] = { ...face, texture: atlasId, uv: [index * 8, 0, index * 8 + 8, 16], rotation: 0 };
+        }
+        if (!Object.keys(faceUpdates).length) throw Error(`${before.name}: all faces are disabled; enable the intended faces in Blockbench first.`);
+      }
+      const changes = [...edit.move ? [`move ${edit.move.join(", ")}`] : [], ...edit.from ? [`bounds ${from.join(", ")} \u2192 ${to.join(", ")}`] : [], ...edit.rotation ? [`rotation ${rotation2.join(", ")}`] : [], ...edit.pivot ? [`pivot ${origin.join(", ")}`] : [], ...edit.material ? [`material ${edit.material} (replace visible-face UVs)`] : []];
+      return { id: before.id, name: before.name, from, to, origin, rotation: rotation2, faceUpdates, changes };
+    });
   }
 
   // packages/core/src/exporters.ts
@@ -21301,6 +21349,57 @@ Minecraft runtime compatibility is NOT verified.
   function createProp(spec) {
     return createGenerated(generateProp(spec), { kind: "prop", description: spec.description }, void 0, spec.materials);
   }
+  function preparePartEdits(projectId, edits) {
+    const p = requireBedrock();
+    if (p.uuid !== projectId) throw new Error("The active project differs from the inspected project. Inspect it again before editing parts.");
+    if (p.locked) throw new Error("The active project is locked.");
+    const asset = captureAsset();
+    const materialRequested = Array.isArray(edits) && edits.some((e) => e?.material !== void 0);
+    const atlases = Texture.all.filter((t) => t.voxelflow_prop_palette);
+    const atlas = atlases[0];
+    if (materialRequested && (!isPropProject() || atlases.length !== 1 || atlas.error || atlas.width !== 128 || atlas.height !== 16 || p.texture_width !== 128 || p.texture_height !== 16)) throw new Error("Material assignment needs one unchanged 128\xD716 VoxelFlow prop atlas. Geometry edits can preserve other textures.");
+    const plans = planPartEdits(asset.cubes, edits, materialRequested ? getPropMaterials() : [], materialRequested ? atlas.uuid : void 0);
+    const targets = plans.map((plan) => {
+      const cube = Cube.all.find((c) => c.uuid === plan.id);
+      const seen = /* @__PURE__ */ new Set();
+      let node3 = cube;
+      while (node3 && node3 !== "root") {
+        if (seen.has(node3)) throw new Error("Invalid parent cycle. Repair the hierarchy before editing.");
+        seen.add(node3);
+        if (node3.locked) throw new Error(`${cube.name} or its parent is locked. Unlock it in Blockbench first.`);
+        node3 = node3.parent;
+      }
+      return cube;
+    });
+    return { p, plans, targets };
+  }
+  function describePartEdits(projectId, edits) {
+    const { p, plans } = preparePartEdits(projectId, edits);
+    return `Edit ${plans.length} existing cube(s) in \u201C${p.name}\u201D.
+${plans.map((plan) => `${plan.name} [${plan.id}]: ${plan.changes.join("; ")}`).join("\n")}
+
+Keep this project tab, cube identities, bones, animations and texture pixels. Moving/resizing keeps existing UVs; an explicit material assignment replaces that cube\u2019s visible-face UVs. One native Undo step restores the batch.`;
+  }
+  function editParts(projectId, edits) {
+    const { p, plans, targets } = preparePartEdits(projectId, edits);
+    const aspects = { elements: targets, mirror_modeling: false };
+    Undo.initEdit(aspects);
+    try {
+      plans.forEach((plan, i2) => {
+        const cube = targets[i2];
+        cube.extend({ from: plan.from, to: plan.to, origin: plan.origin, rotation: plan.rotation });
+        for (const side of faces) {
+          const face = plan.faceUpdates[side];
+          if (face) cube.faces[side].extend({ ...face, texture: face.texture ?? false });
+        }
+      });
+      finish("Edit parts", aspects);
+      return { projectId: p.uuid, edited: plans.map(({ id, name }) => ({ id, name })), message: "Updated existing parts in this tab. Native Undo restores the complete batch." };
+    } catch (error62) {
+      Undo.cancelEdit(true);
+      throw error62;
+    }
+  }
   function createGenerated(a, meta3, palette, propMaterials) {
     const validation = validateAsset(a);
     if (!validation.ready) throw new Error("Generated plan failed validation: " + validation.findings.filter((f) => f.status === "failed").map((f) => f.message).join(" "));
@@ -21482,7 +21581,8 @@ Minecraft runtime compatibility is NOT verified.
             existing = this.ledger.get(args.request_id);
           } catch {
           }
-          if (!existing && (this.busy || this.ledger.list().some((o) => o.state === "pending_approval"))) throw new Error("Review or cancel the current proposal before starting another change.");
+          if (existing) return { ok: true, data: this.ledger.propose(args.request_id, tool, args, existing.summary).operation };
+          if (this.busy || this.ledger.list().some((o) => o.state === "pending_approval")) throw new Error("Review or cancel the current proposal before starting another change.");
           const summary = this.summary(tool, args);
           const proposal = this.ledger.propose(args.request_id, tool, args, summary);
           if (proposal.fresh) {
@@ -21528,6 +21628,8 @@ Minecraft runtime compatibility is NOT verified.
     }
     summary(tool, args) {
       switch (tool) {
+        case "edit_parts":
+          return describePartEdits(args.project_id, args.edits);
         case "create_model":
           return `Create \u201C${args.spec.name}\u201D in a new Bedrock tab: ${args.spec.height} units tall, ${args.spec.build} build, ${args.spec.detail} geometry. Colors ${args.spec.palette.primary}, ${args.spec.palette.secondary}, eyes ${args.spec.palette.eyes}. Add 11 editable joints and ${args.spec.animations.clips.join(", ")} animations at ${args.spec.animations.speed}\xD7 speed and ${args.spec.animations.intensity}\xD7 intensity. Existing tabs remain open.`;
         case "create_prop":
@@ -21574,6 +21676,9 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
         if (sceneStamp() !== plan.stamp) throw new Error("The project changed after this plan was proposed. Review the current model and submit a new proposal.");
         let result;
         switch (op.tool) {
+          case "edit_parts":
+            result = editParts(plan.args.project_id, plan.args.edits);
+            break;
           case "create_model":
             result = createRobot(plan.args.spec);
             break;
@@ -22056,7 +22161,7 @@ A static prop with a real PNG and UVs. Existing tabs stay open. Game item/attach
     author: "VoxelFlow Studio contributors",
     description: "Prompt-designed Minecraft props and animated robots: editable geometry, named materials, quality checks and Bedrock exports. Connect ChatGPT/Codex through MCP or use offline examples.",
     icon: "smart_toy",
-    version: "0.3.4",
+    version: "0.3.5",
     min_version: "5.2.0",
     variant: "desktop",
     tags: ["Minecraft: Bedrock Edition", "Animation", "Utility"],

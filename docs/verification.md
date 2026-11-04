@@ -4,6 +4,14 @@ Tested on 2026-10-29 with Windows, Node 24.11.1, npm 11.6.2, and the installed B
 
 ## Automated results
 
+### Version 0.3.5: individual part edits
+
+On 2026-11-04, all **139 tests in 10 files**, type checking, build, and robot/prop example validation pass on Windows with Node 24.11.1. Fresh-extraction desktop verification discovers **15 tools and 2 prompts** with no node_modules installation. Planner and adapter tests cover whole-batch preflight, bounds, ambiguous/missing targets, locks, texture/UV preservation, rollback on a native edit failure, Undo boundaries, and approval/retry/stale-scene behavior.
+
+The official MCP SDK also exercised the actual Blockbench desktop editor using a separate `part_edit_test` bag tab. A native approval moved only `front_pocket` up two pixels. Live inspection confirmed the same project ID, all 28 cube IDs, unchanged other parts and bones, unchanged inspected UVs/texture summaries, and no second movement on an identical retry. Validation returned 5 passed, 1 engine-unverified warning, 0 failed. Native Undo through its approval dialog restored the complete pre-edit inspection. [Live result record](evidence/part-edits-live.json).
+
+The first live attempt caught Blockbench's non-RFC UUID format; project and part IDs now accept Blockbench's hexadecimal ID shape while request IDs remain RFC UUIDs. The protocol regression uses real-format IDs. Automated texture-pixel and rollback checks use editor API doubles; live inspection checks texture metadata/PNG byte counts, not a pixel hash. Resize/rotation/material cases are covered automatically, but the live smoke test covers translation and Undo only. Natural-language selection in a fresh ChatGPT account and native macOS/Linux behavior remain unverified.
+
 ### Version 0.3.3: standalone setup diagnostics
 
 All 84 tests, type checking, build, and examples pass on Windows with Node 24.11.1. Fresh-extraction verification checks the bundled diagnostic without node_modules, launched from outside the plugin folder. It covers missing package files, a disconnected editor, required tool discovery, custom companion configuration, credential suppression, and a connected protocol fixture. The fixture only tests diagnostic behavior; it is not evidence of native editor behavior or successful ChatGPT onboarding. Diagnostics must issue only get_editor_status and explicitly report that AI-host access is not checked.

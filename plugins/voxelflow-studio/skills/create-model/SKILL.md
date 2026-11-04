@@ -1,6 +1,6 @@
 ---
 name: create-model
-description: Create or recolor Minecraft-style props and animated robots in a connected Blockbench editor using VoxelFlow tools.
+description: Create, edit individual parts of, or recolor Minecraft-style props and animated robots in a connected Blockbench editor using VoxelFlow tools.
 ---
 
 The user's chat prompt is the design brief. Check `get_editor_status`, then use `create_prop` for general objects and `create_model` only for the animated robot preset. For a disconnected editor, use the setup instructions in [../setup/SKILL.md](../setup/SKILL.md).
@@ -11,6 +11,6 @@ Save tokens without simplifying the requested design: use `repeat: {count, step:
 
 Creation opens a new tab. Present the design and submit one UUID request. Ask the artist to review the native Blockbench dialog; `pending_approval` is not completion. Read `get_operation` after approval. Retry only with the same ID and arguments. If the scene changes or the plugin reloads, inspect it before creating another request. Respect the user's requested scope; don't export unless requested.
 
-After creation, inspect and validate the actual project. Read material names before `apply_prop_materials`. This preserves painted pixels and geometry. Structural revisions currently create a new copy; individual parts remain editable in Blockbench. Explain unsupported requests instead of inventing tools.
+After creation, inspect and validate the actual project. Read material names before `apply_prop_materials`. This preserves painted pixels and geometry. For revisions to existing parts, inspect with `detail: "full"` and use `edit_parts` with the exact `project.id` and `geometry.parts[].id`; never guess IDs or recreate the model for a small edit. Names and groups identify intended cubes; clarify ambiguous requests. Send only changed fields and affected cubes. `move` translates corners and cube pivot; `from` and `to` set absolute bounds (keep pivot unless supplied); `rotation` is absolute degrees and `pivot` is a cube pivot, not a bone pivot. Keep connected pieces together when the user asks to move an assembly. Geometry edits keep texture pixels and per-face UVs. Box-UV resizing is refused to protect mapping. `material` assigns an EXISTING prop material to selected cubes, replacing visible-face UVs; warn that painted details can disappear from those faces though pixels stay intact. Use `apply_prop_materials` only for a global named-color change. Submit one approval-bound batch, poll until applied, then inspect and validate. Native Undo restores the whole batch. Do not invent add/delete/reparent/bone-edit tools. Explain unsupported requests instead of inventing tools.
 
 Outputs are editable resource assets. Inventory items, wearable bags, working weapons, emissive shaders, and arbitrary animated creature rigs are not implemented. Static prop exports omit humanoid animation requirements. Robot presets support idle, walk, and attack. Minecraft runtime is unverified.

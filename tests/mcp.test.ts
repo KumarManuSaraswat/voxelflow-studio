@@ -11,7 +11,10 @@ it('official SDK negotiates stdio, exposes schemas, validates inputs and reports
   let fixture:WebSocket|undefined;
   try{
     await client.connect(new StdioClientTransport({command:process.execPath,args:['--import','tsx',resolve('packages/mcp-server/src/server.ts')],env:{...Object.fromEntries(Object.entries(process.env).filter((e):e is [string,string]=>e[1]!==undefined)),VOXELFLOW_PORT:String(bridge.port),VOXELFLOW_TOKEN:token},stderr:'pipe'}));
-    const list=await client.listTools();expect(list.tools).toHaveLength(14);const create=list.tools.find(t=>t.name==='create_prop')!;expect(create.annotations?.readOnlyHint).toBe(false);expect(create.inputSchema.required).toContain('request_id');expect(list.tools.some(t=>t.name==='apply_prop_materials')).toBe(true);
+    const list=await client.listTools();expect(list.tools).toHaveLength(15);const create=list.tools.find(t=>t.name==='create_prop')!;expect(create.annotations?.readOnlyHint).toBe(false);expect(create.inputSchema.required).toContain('request_id');expect(list.tools.some(t=>t.name==='apply_prop_materials')).toBe(true);
+    const edit=list.tools.find(t=>t.name==='edit_parts')!;expect(edit.annotations?.readOnlyHint).toBe(false);expect(edit.inputSchema.required).toEqual(expect.arrayContaining(['request_id','project_id','edits']));
+    const edits=(edit.inputSchema.properties!.edits as any);expect(edits.maxItems).toBe(128);
+    for(const field of ['move','from','to','rotation','pivot'])expect(edits.items.properties[field]).toMatchObject({type:'array',items:{type:'number'},minItems:3,maxItems:3});
     // Regression: the real Codex host rejected tuple-style `items: [...]`, hiding
     // create_prop even though ordinary MCP discovery succeeded.
     const part=(create.inputSchema.properties!.spec as any).properties.parts.items;
@@ -43,5 +46,9 @@ it('official SDK negotiates stdio, exposes schemas, validates inputs and reports
     expect(received[0].args.spec.parts[2]).toMatchObject({name:'step_3',from:[0,4,0]});
     await client.callTool({name:'inspect_project',arguments:{}});expect(received.at(-1).args).toEqual({detail:'summary'});
     await client.callTool({name:'inspect_project',arguments:{detail:'full'}});expect(received.at(-1).args).toEqual({detail:'full'});
+    // Real Blockbench IDs need not carry RFC UUID version or variant bits.
+    const patch={request_id:crypto.randomUUID(),project_id:'900bcb51-77ee-3b58-c59c-29b8fbc3b5a8',edits:[{part_id:'6e07f35a-c923-290d-5026-8ecf7a36e44d',move:[0,2,0]}]};
+    const editing=await client.callTool({name:'edit_parts',arguments:patch});expect(editing.structuredContent).toMatchObject({ok:true,data:{state:'pending_approval'}});expect(received.at(-1).args).toEqual(patch);
+    const badEdit=await client.callTool({name:'edit_parts',arguments:{...patch,edits:[{part_id:patch.edits[0].part_id,from:[0,0,0]}]}});expect(badEdit.isError).toBe(true);
   }finally{fixture?.terminate();await client.close();await bridge.close();}
 },15000);

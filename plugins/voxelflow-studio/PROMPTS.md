@@ -18,7 +18,7 @@ Use these briefs in a local desktop chat with VoxelFlow's tools enabled. They ar
 3. "Validate the current model and explain any failures or warnings."
 4. "Export the Bedrock resource assets." Review approval and complete the Save dialog.
 
-Geometry changes through chat currently create a new model tab. For precise in-place part edits, use Blockbench. Ask explicitly for a new variant if you want the assistant to rebuild a design.
+With 0.3.5 installed on both sides, try: “Make only the front pocket two pixels wider”, “Move both handles up by two pixels”, or “Rotate the crystal 15 degrees around Y”. The assistant inspects exact part IDs and uses `edit_parts` in the same tab. Review the named changes in Blockbench and approve; one native Undo restores the batch. Assign an existing named prop material to change just one part. Adding/removing cubes or editing bones is not supported by this tool.
 
 ## Share an example
 

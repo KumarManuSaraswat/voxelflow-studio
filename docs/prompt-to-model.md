@@ -48,7 +48,7 @@ Bounds: 1–128 cubes, 1–16 named colors, at most 32 groups, coordinates/pivot
 
 The atlas is a real 128×16 PNG. `apply_prop_materials` changes existing named colors while preserving individually painted pixels. Example: after inspecting the materials, use `materials: [{"name":"leather","color":"#336b52"}]` to make the bag green without rebuilding it. Each change still requires approval and supports native Undo.
 
-Structural revisions currently create a new project copy through another `create_prop` request. Targeted in-place cube editing is not exposed as an MCP tool in this release. Native Blockbench tools can edit every part directly.
+Version 0.3.5 adds `edit_parts` for targeted edits in the current tab. Inspect full geometry, use exact project/cube IDs, and submit only changed parts. Move, resize, rotate, change cube pivots, or assign an existing prop material; native approval and one Undo cover the batch. See [editing individual parts](editing-parts.md) for semantics and limits.
 
 ## Offline and export
 

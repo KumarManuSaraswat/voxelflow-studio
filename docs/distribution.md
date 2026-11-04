@@ -22,7 +22,7 @@ This needs a different deployment: host an authenticated HTTPS MCP service, gene
 
 ## Release checks
 
-Run `npm ci`, `npm run check`, `npm run package:desktop`, and `npm run verify:desktop`. Verification extracts outside the repository, starts the bundled companion, negotiates MCP, checks 14 tools and 2 prompts, verifies missing-editor and invalid-input behavior, and confirms desktop logs omit credentials. It does not simulate successful modeling.
+Run `npm ci`, `npm run check`, `npm run package:desktop`, and `npm run verify:desktop`. Verification extracts outside the repository, starts the bundled companion, negotiates MCP, checks 15 tools and 2 prompts, verifies missing-editor and invalid-input behavior, and confirms desktop logs omit credentials. It does not simulate successful modeling.
 
 Regenerate the ZIPs after changing their manifest, assets, guide, skills, or runtime. The source archive `dist/voxelflow-studio-0.2.0.zip` is historical; 0.3 desktop ZIPs are the end-user downloads. Refresh installed cache copies through the host plugin manager.
 

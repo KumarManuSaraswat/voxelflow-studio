@@ -99,11 +99,29 @@ export interface Clip { name: string; loop: boolean; length: number; tracks: Tra
 export interface Asset { name: string; namespace: string; kind?: 'humanoid'|'prop'; bones: BoneData[]; cubes: CubeData[]; textures: TextureData[]; animations: Clip[]; mapping: Partial<RigMapping>; unsupported: string[] }
 
 const requestId = z.string().uuid().describe('Unique operation ID. Reuse the SAME ID and parameters when retrying; never regenerate on a timeout.');
+// Blockbench's IDs do not enforce RFC UUID version/variant bits.
+const editorId=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,'Use the exact Blockbench id returned by inspection.');
+export const PartEditSchema = z.object({
+  part_id:editorId.describe('Exact cube id from inspect_project with detail:full; never guess from a name.'),
+  move:propPosition.optional().describe('Relative translation in model coordinates. Translates both corners and the pivot. Cannot combine with from/to/pivot.'),
+  from:propPosition.optional().describe('New minimum corner; supply together with to. Existing pivot stays unless explicitly supplied.'),
+  to:propPosition.optional().describe('New maximum corner; supply together with from.'),
+  rotation:propRotation.optional().describe('Absolute cube rotation in degrees. Does not change the parent bone or animation.'),
+  pivot:propPosition.optional().describe('Absolute cube rotation pivot. Does not reposition a bone.'),
+  material:safeName.optional().describe('Assign an existing VoxelFlow prop material to this cube’s visible faces. Replaces their UV mapping; does not recolor the shared texture.')
+}).strict().superRefine((p,ctx)=>{
+  if(!['move','from','to','rotation','pivot','material'].some(k=>p[k as keyof typeof p]!==undefined))ctx.addIssue({code:'custom',message:'Supply at least one change.'});
+  if((p.from===undefined)!==(p.to===undefined))ctx.addIssue({code:'custom',message:'Supply from and to together.'});
+  if(p.move && (p.from || p.to || p.pivot))ctx.addIssue({code:'custom',message:'Move cannot be combined with corners or pivot.'});
+});
+export const PartEditsSchema=z.array(PartEditSchema).min(1).max(128).refine(edits=>new Set(edits.map(e=>e.part_id)).size===edits.length,'Edit each part once per request.');
+export type PartEdit=z.infer<typeof PartEditSchema>;
 export const toolSchemas = {
   get_editor_status: z.object({}).strict(),
   inspect_project: z.object({detail:z.enum(['summary','full']).default('summary').describe('Summary saves tokens and includes counts, groups, materials and warnings. Use full only when coordinates, pivots or UVs are needed.')}).strict(),
   create_model: z.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
   create_prop: z.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
+  edit_parts:z.object({request_id:requestId,project_id:editorId.describe('Active project id returned by inspection; prevents edits to a different tab.'),edits:PartEditsSchema}).strict(),
   apply_prop_materials: z.object({ request_id: requestId, materials: PropMaterialsSchema.describe('Update existing named prop materials; omitted materials keep their colors.') }).strict(),
   apply_materials: z.object({ request_id: requestId, palette: PaletteSchema }).strict(),
   generate_rig: z.object({ request_id: requestId, mapping: RigMappingSchema.optional() }).strict(),
@@ -117,7 +135,7 @@ export const toolSchemas = {
 };
 export type ToolName = keyof typeof toolSchemas;
 export const toolNames = Object.keys(toolSchemas) as ToolName[];
-export const mutationNames = ['create_model', 'create_prop', 'apply_prop_materials', 'apply_materials', 'generate_rig', 'generate_animations', 'export_asset', 'undo_last_change'] as const;
+export const mutationNames = ['create_model', 'create_prop', 'edit_parts', 'apply_prop_materials', 'apply_materials', 'generate_rig', 'generate_animations', 'export_asset', 'undo_last_change'] as const;
 export function parseTool(name: string, args: unknown): { name: ToolName; args: any } {
   if (!Object.hasOwn(toolSchemas, name)) throw new Error(`Unknown operation: ${name}`);
   return { name: name as ToolName, args: toolSchemas[name as ToolName].parse(args) };
