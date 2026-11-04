@@ -1,6 +1,7 @@
 import { Asset, AssetSpec, Clip, CubeData, FaceName, faces, Palette, PropMaterial, PropMaterialsSchema, PropSpec, RigMapping, Role, roles, V3 } from '../../../core/src/schema';
 import {generateProp,propAtlasPixels,recolorProp} from '../../../core/src/props';
 import {inspectGeometry} from '../../../core/src/inspection';
+import {planPartEdits} from '../../../core/src/part-edits';
 import { detectRig, generateRobot } from '../../../core/src/modeling';
 import { generateAnimations } from '../../../core/src/animation';
 import { validateAsset } from '../../../core/src/validation';
@@ -116,6 +117,44 @@ export function createRobot(spec:AssetSpec) {
   return createGenerated(generateRobot(spec),{kind:'humanoid'},spec.palette);
 }
 export function createProp(spec:PropSpec){return createGenerated(generateProp(spec),{kind:'prop',description:spec.description},undefined,spec.materials);}
+function preparePartEdits(projectId:string,edits:unknown){
+  const p=requireBedrock();
+  if(p.uuid!==projectId)throw new Error('The active project differs from the inspected project. Inspect it again before editing parts.');
+  if(p.locked)throw new Error('The active project is locked.');
+  const asset=captureAsset();
+  const materialRequested=Array.isArray(edits)&&edits.some(e=>e?.material!==undefined);
+  const atlases=Texture.all.filter(t=>(t as VFTexture).voxelflow_prop_palette);
+  const atlas=atlases[0];
+  if(materialRequested&&(!isPropProject()||atlases.length!==1||atlas.error||atlas.width!==128||atlas.height!==16||p.texture_width!==128||p.texture_height!==16))throw new Error('Material assignment needs one unchanged 128×16 VoxelFlow prop atlas. Geometry edits can preserve other textures.');
+  const plans=planPartEdits(asset.cubes,edits,materialRequested?getPropMaterials():[],materialRequested?atlas.uuid:undefined);
+  const targets=plans.map(plan=>{
+    const cube=Cube.all.find(c=>c.uuid===plan.id)!;
+    const seen=new Set<unknown>();let node:any=cube;
+    while(node&&node!=='root'){
+      if(seen.has(node))throw new Error('Invalid parent cycle. Repair the hierarchy before editing.');seen.add(node);
+      if(node.locked)throw new Error(`${cube.name} or its parent is locked. Unlock it in Blockbench first.`);
+      node=node.parent;
+    }
+    return cube;
+  });
+  return {p,plans,targets};
+}
+export function describePartEdits(projectId:string,edits:unknown){
+  const {p,plans}=preparePartEdits(projectId,edits);
+  return `Edit ${plans.length} existing cube(s) in “${p.name}”.\n${plans.map(plan=>`${plan.name} [${plan.id}]: ${plan.changes.join('; ')}`).join('\n')}\n\nKeep this project tab, cube identities, bones, animations and texture pixels. Moving/resizing keeps existing UVs; an explicit material assignment replaces that cube’s visible-face UVs. One native Undo step restores the batch.`;
+}
+export function editParts(projectId:string,edits:unknown){
+  const {p,plans,targets}=preparePartEdits(projectId,edits);
+  const aspects:UndoAspects={elements:targets,mirror_modeling:false};Undo.initEdit(aspects);
+  try{
+    plans.forEach((plan,i)=>{
+      const cube=targets[i];cube.extend({from:plan.from,to:plan.to,origin:plan.origin,rotation:plan.rotation});
+      for(const side of faces){const face=plan.faceUpdates[side];if(face)cube.faces[side].extend({...face,texture:face.texture??false});}
+    });
+    finish('Edit parts',aspects);
+    return {projectId:p.uuid,edited:plans.map(({id,name})=>({id,name})),message:'Updated existing parts in this tab. Native Undo restores the complete batch.'};
+  }catch(error){Undo.cancelEdit(true);throw error;}
+}
 function createGenerated(a:Asset,meta:Record<string,unknown>,palette?:Palette,propMaterials?:PropMaterial[]){
   const validation=validateAsset(a);if(!validation.ready)throw new Error('Generated plan failed validation: '+validation.findings.filter(f=>f.status==='failed').map(f=>f.message).join(' '));
   const previous=typeof Project!=='undefined'&&Project?Project:undefined;

@@ -24,7 +24,7 @@ In a second terminal at the project root:
 npx @modelcontextprotocol/inspector node packages/mcp-server/dist/server.js
 ```
 
-Open the local Inspector URL printed by the official Inspector, connect the stdio transport, and list tools. Expect 14 tools. Call `get_editor_status` with `{}` and require `connected: true` before proceeding. `npm run demo -- --status` provides the same handshake path without the Inspector UI.
+Open the local Inspector URL printed by the official Inspector, connect the stdio transport, and list tools. Expect 15 tools. Call `get_editor_status` with `{}` and require `connected: true` before proceeding. `npm run demo -- --status` provides the same handshake path without the Inspector UI.
 
 For general objects, use `create_prop` with a `PropSpec` designed from the user's prompt. See [the complete prompt-to-model contract](prompt-to-model.md). `npm run demo -- --prop bag` or `--prop staff` exercises creation, validation, and export locally. The robot example below remains supported.
 

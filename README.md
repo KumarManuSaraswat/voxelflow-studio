@@ -33,9 +33,9 @@ The prompt belongs in your AI chat; Blockbench is the model workspace. Bag, Staf
 | Characters | Configurable Atlas robot, mapping of suitable existing humanoid rigs, editable idle/walk/attack clips |
 | Artist control | Native approval dialogs, Undo, stale-proposal checks, and retry deduplication |
 | Export | Editable Blockbench source and Bedrock geometry, textures, and applicable animation resources |
-| Desktop integration | Bundled MCP server, 14 tools, 2 prompts, setup/modeling skills, and a Windows companion launcher |
+| Desktop integration | Bundled MCP server, 15 tools, 2 prompts, setup/modeling skills, and a Windows companion launcher |
 
-This is an early desktop beta. Structural changes through MCP currently create a new model tab. Custom animated creatures, inventory items, wearable attachments, and gameplay behavior are future work. Resource exports still need Minecraft integration and in-game testing. See [supported scope](docs/roadmap.md) and [Bedrock integration](docs/bedrock-integration.md).
+This is an early desktop beta. Version 0.3.5 adds [individual part editing](docs/editing-parts.md) in the current tab: move, resize, rotate, adjust pivots, or assign an existing prop material with approval and Undo. Custom animated creatures, inventory items, wearable attachments, and gameplay behavior are future work. Resource exports still need Minecraft integration and in-game testing. See [supported scope](docs/roadmap.md) and [Bedrock integration](docs/bedrock-integration.md).
 
 ## Install
 

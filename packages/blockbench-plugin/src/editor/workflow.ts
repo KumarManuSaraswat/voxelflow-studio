@@ -15,7 +15,8 @@ export class Workflow {
       const {name:tool,args}=parseTool(name,input);
       if((mutationNames as readonly string[]).includes(tool)) {
         let existing:Operation|undefined;try{existing=this.ledger.get(args.request_id);}catch{}
-        if(!existing && (this.busy||this.ledger.list().some(o=>o.state==='pending_approval')))throw new Error('Review or cancel the current proposal before starting another change.');
+        if(existing)return {ok:true,data:this.ledger.propose(args.request_id,tool,args,existing.summary).operation};
+        if(this.busy||this.ledger.list().some(o=>o.state==='pending_approval'))throw new Error('Review or cancel the current proposal before starting another change.');
         const summary=this.summary(tool,args);
         const proposal=this.ledger.propose(args.request_id,tool,args,summary);
         if(proposal.fresh){
@@ -39,6 +40,7 @@ export class Workflow {
   }
   summary(tool:ToolName,args:any) {
     switch(tool){
+      case 'edit_parts':return editor.describePartEdits(args.project_id,args.edits);
       case 'create_model':return `Create “${args.spec.name}” in a new Bedrock tab: ${args.spec.height} units tall, ${args.spec.build} build, ${args.spec.detail} geometry. Colors ${args.spec.palette.primary}, ${args.spec.palette.secondary}, eyes ${args.spec.palette.eyes}. Add 11 editable joints and ${args.spec.animations.clips.join(', ')} animations at ${args.spec.animations.speed}× speed and ${args.spec.animations.intensity}× intensity. Existing tabs remain open.`;
       case 'create_prop':return `Create “${args.spec.name}” in a new Bedrock tab.\n${args.spec.description}\n\n${args.spec.parts.length} editable cubes in ${new Set(args.spec.parts.map((p:any)=>p.group)).size} part groups. Materials: ${args.spec.materials.map((m:any)=>`${m.name} ${m.color}`).join(', ')}.\nParts include: ${args.spec.parts.slice(0,12).map((p:any)=>p.name.replaceAll('_',' ')).join(', ')}${args.spec.parts.length>12?'…':''}.\n\nA static prop with a real PNG and UVs. Existing tabs stay open. Game item/attachable registration is a separate integration step.`;
       case 'apply_prop_materials':return `Recolor prop materials: ${args.materials.map((m:any)=>`${m.name} → ${m.color}`).join(', ')}. Preserve painted pixels and all geometry. Undo is available.`;
@@ -60,6 +62,7 @@ export class Workflow {
       if(editor.sceneStamp()!==plan.stamp)throw new Error('The project changed after this plan was proposed. Review the current model and submit a new proposal.');
       let result:any;
       switch(op.tool){
+        case 'edit_parts':result=editor.editParts(plan.args.project_id,plan.args.edits);break;
         case 'create_model':result=editor.createRobot(plan.args.spec);break;
         case 'create_prop':result=editor.createProp(plan.args.spec);break;
         case 'apply_prop_materials':result=editor.applyPropMaterials(plan.args.materials);break;

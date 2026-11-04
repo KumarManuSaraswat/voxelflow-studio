@@ -40425,11 +40425,27 @@ var PropSpecSchema = external_exports.object({
 var roles = ["root", "torso", "head", "left_upper_arm", "left_lower_arm", "right_upper_arm", "right_lower_arm", "left_upper_leg", "left_lower_leg", "right_upper_leg", "right_lower_leg"];
 var RigMappingSchema = external_exports.object(Object.fromEntries(roles.map((r) => [r, external_exports.string().min(1).max(128)]))).strict();
 var requestId = external_exports.string().uuid().describe("Unique operation ID. Reuse the SAME ID and parameters when retrying; never regenerate on a timeout.");
+var editorId = external_exports.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Use the exact Blockbench id returned by inspection.");
+var PartEditSchema = external_exports.object({
+  part_id: editorId.describe("Exact cube id from inspect_project with detail:full; never guess from a name."),
+  move: propPosition.optional().describe("Relative translation in model coordinates. Translates both corners and the pivot. Cannot combine with from/to/pivot."),
+  from: propPosition.optional().describe("New minimum corner; supply together with to. Existing pivot stays unless explicitly supplied."),
+  to: propPosition.optional().describe("New maximum corner; supply together with from."),
+  rotation: propRotation.optional().describe("Absolute cube rotation in degrees. Does not change the parent bone or animation."),
+  pivot: propPosition.optional().describe("Absolute cube rotation pivot. Does not reposition a bone."),
+  material: safeName.optional().describe("Assign an existing VoxelFlow prop material to this cube\u2019s visible faces. Replaces their UV mapping; does not recolor the shared texture.")
+}).strict().superRefine((p, ctx) => {
+  if (!["move", "from", "to", "rotation", "pivot", "material"].some((k) => p[k] !== void 0)) ctx.addIssue({ code: "custom", message: "Supply at least one change." });
+  if (p.from === void 0 !== (p.to === void 0)) ctx.addIssue({ code: "custom", message: "Supply from and to together." });
+  if (p.move && (p.from || p.to || p.pivot)) ctx.addIssue({ code: "custom", message: "Move cannot be combined with corners or pivot." });
+});
+var PartEditsSchema = external_exports.array(PartEditSchema).min(1).max(128).refine((edits) => new Set(edits.map((e) => e.part_id)).size === edits.length, "Edit each part once per request.");
 var toolSchemas = {
   get_editor_status: external_exports.object({}).strict(),
   inspect_project: external_exports.object({ detail: external_exports.enum(["summary", "full"]).default("summary").describe("Summary saves tokens and includes counts, groups, materials and warnings. Use full only when coordinates, pivots or UVs are needed.") }).strict(),
   create_model: external_exports.object({ request_id: requestId, spec: AssetSpecSchema }).strict(),
   create_prop: external_exports.object({ request_id: requestId, spec: PropSpecSchema }).strict(),
+  edit_parts: external_exports.object({ request_id: requestId, project_id: editorId.describe("Active project id returned by inspection; prevents edits to a different tab."), edits: PartEditsSchema }).strict(),
   apply_prop_materials: external_exports.object({ request_id: requestId, materials: PropMaterialsSchema.describe("Update existing named prop materials; omitted materials keep their colors.") }).strict(),
   apply_materials: external_exports.object({ request_id: requestId, palette: PaletteSchema }).strict(),
   generate_rig: external_exports.object({ request_id: requestId, mapping: RigMappingSchema.optional() }).strict(),
@@ -40442,7 +40458,7 @@ var toolSchemas = {
   preview_animation: external_exports.object({ clip: ClipName, playing: external_exports.boolean().default(true) }).strict()
 };
 var toolNames = Object.keys(toolSchemas);
-var mutationNames = ["create_model", "create_prop", "apply_prop_materials", "apply_materials", "generate_rig", "generate_animations", "export_asset", "undo_last_change"];
+var mutationNames = ["create_model", "create_prop", "edit_parts", "apply_prop_materials", "apply_materials", "generate_rig", "generate_animations", "export_asset", "undo_last_change"];
 var ToolResponseSchema = external_exports.object({ ok: external_exports.boolean(), data: external_exports.unknown().optional(), error: external_exports.string().optional() }).strict();
 
 // packages/mcp-server/src/transport/client.ts
@@ -40528,6 +40544,7 @@ async function readConfig() {
 
 // packages/mcp-server/src/server.ts
 var descriptions = {
+  edit_parts: "Edit existing cubes in the CURRENT Bedrock project without recreating it. First inspect_project with detail:full to obtain project.id, geometry.parts[].id, names, bounds and pivots. Send project_id and only the changed parts/fields. move translates corners and pivot; from/to resize while keeping the pivot unless supplied; rotation is absolute. Works on prop or humanoid cubes, not bones/meshes. Optional material assigns an existing VoxelFlow prop color slot and replaces visible-face UVs; geometry-only edits preserve UVs and all texture pixels. Requires native approval and supports one Undo for the batch. Poll get_operation after artist approval. Never guess UUIDs, recreate the model for a small edit, or claim completion before applied.",
   get_editor_status: "Read live Blockbench connection, project, version and format. Returns connected:false when unavailable; never simulates an editor.",
   inspect_project: "Read the live project. Default summary returns counts, groups, materials, rig mapping, texture/animation summaries and warnings with fewer tokens. Request detail:full only for cube coordinates, pivots, UVs or bone transforms.",
   create_model: "Propose an editable humanoid robot with palette, articulated rig, and idle/walk/attack clips in a NEW Bedrock project tab. Translate natural language into AssetSpec; only robot/bedrock is implemented. Returns pending_approval. Ask the artist to approve in Blockbench, then poll get_operation. Eye color is bright cyan, not an emissive shader.",
@@ -40543,7 +40560,7 @@ var descriptions = {
   cancel_operation: "Cancel a pending approval without changing the scene. Running exports must be cancelled in the native Save dialog.",
   preview_animation: "Select and play or stop an existing idle, walk, or attack clip in the real Blockbench animation timeline. Does not create or edit keyframes."
 };
-var server = new McpServer({ name: "voxelflow-studio", version: "0.3.4" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. Keep plans brief; do not echo the JSON blueprint in chat. Use repeat for repeated prop parts and summary inspection for routine checks/recoloring; full inspection only for geometry analysis. Never reduce requested detail to save tokens. You may design new object types: the generic cube blueprint is not limited to presets. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
+var server = new McpServer({ name: "voxelflow-studio", version: "0.3.5" }, { instructions: "VoxelFlow is a prompt-to-Minecraft-model plugin. The artist enters the prompt HERE in ChatGPT/Codex; Blockbench is the approval, editing, and preview workspace. First get_editor_status. For bags, staffs, weapons, furniture and other props, translate the brief into create_prop geometry and named materials. Do not force props into the robot template or invent a humanoid rig. Keep plans brief; do not echo the JSON blueprint in chat. Use repeat for repeated prop parts and summary inspection for routine checks/recoloring; full inspection only for geometry analysis. Never reduce requested detail to save tokens. You may design new object types: the generic cube blueprint is not limited to presets. For edits to existing parts, inspect full geometry and use edit_parts with exact project and cube IDs; do not recreate the model. Send only affected cubes and changed fields. Box-UV resizing is refused to protect texture mapping. Material assignment uses an existing prop slot and replaces selected-face UVs; explain that painted details may no longer appear on those faces. Ask when the intended part is ambiguous. Use create_model only for the animated robot template. Present the design, call the appropriate tool once, then wait for native approval and poll get_operation. All changes require approval; never report success before applied or bypass it. Reuse IDs for retries. Inspect actual material names before recoloring props. Validate before export. Output is editable resource assets, not a game-tested item, wearable, weapon, or mob. Creating a held item or equippable bag requires additional game integration." });
 for (const name of toolNames) {
   const mutation = mutationNames.includes(name);
   server.registerTool(name, {

@@ -9,7 +9,7 @@ Start with one small, reproducible contribution. Check open issues and leave a c
 | Clarify one setup step | Writers | A focused guide correction backed by an actual fresh installation |
 | Test macOS or Linux | Platform testers | Node/Blockbench versions, startup/discovery/export results, and a reproducible failure report; these platforms are not yet verified |
 | Verify a Bedrock export in game | Minecraft creators | Game version, the extra integration files used, content-log findings, and reproduction steps; do not infer gameplay support from a valid ZIP |
-| Add in-place prop editing | Experienced developers | Discuss the design first: preserve part identity, painted textures, native approval, Undo, and stale-scene checks; include meaningful regression and editor tests |
+| Test and extend individual part editing | Experienced developers | Exercise `edit_parts` on imported cube models, report exact reproduction steps, and discuss additions/removals or assembly transforms before implementation. Preserve identity, textures, approval, Undo and stale-scene checks. |
 
 ## Report a useful result
 

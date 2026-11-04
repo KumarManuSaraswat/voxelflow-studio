@@ -2,16 +2,16 @@
 
 Version 0.3 packages the desktop beta with bundled MCP dependencies, setup/modeling skills, automatic local pairing, and a Windows launcher. It includes general prompt-designed static props: up to 128 cubes and 16 named materials, native texture/UVs, material edits, validation, Undo, and static Bedrock resource exports. Bag and Staff are working examples. It retains the animated robot pipeline, including humanoid mapping and idle/walk/attack clips.
 
-Creative prompts go in connected ChatGPT/Codex, which designs a general prop specification or a robot specification. There is no local free-text parser or hidden model endpoint. Structural revisions currently create a fresh project; targeted in-place part editing over MCP is a next milestone. Animated custom characters and quadruped rigs are not implemented.
+Creative prompts go in connected ChatGPT/Codex, which designs a general prop specification or a robot specification. There is no local free-text parser or hidden model endpoint. Version 0.3.5 adds targeted cube edits over MCP in the current project, including approval, Undo, and stale-scene checks. Animated custom characters and quadruped rigs are not implemented.
 
 ## Next artist milestones
 
-The immediate focus after 0.3.3 is first-use reliability and useful revisions: independent fresh-account setup reports, in-place editing of named prop parts with approval and Undo, and reproducible Minecraft integration examples. The downloadable diagnostic, prompt gallery, and contributor report forms are now available. Automated package checks on an OS do not establish native Blockbench support there; macOS/Linux still need real editor testing.
+The next focus is independent fresh-account setup reports, testing part edits on artists’ real models, and reproducible Minecraft integration examples. The downloadable diagnostic, prompt gallery, and contributor report forms are now available. Automated package checks on an OS do not establish native Blockbench support there; macOS/Linux still need real editor testing.
 
 These are proposed directions, not delivery promises. Contributions and concrete artist examples help decide priority; discuss substantial work in an issue before implementation.
 
 1. Test with more imported humanoids and add a joint-placement preview; currently mapping requires an existing appropriate hierarchy and does not reposition joints.
-2. Add targeted prop geometry editing, richer pixel textures, and Bedrock item/attachable export with hand/body transforms.
+2. Extend part editing to additions/removals and assembly transforms, add richer pixel textures, and Bedrock item/attachable export with hand/body transforms.
 3. Add a live nonmutating pose preview before animation replacement. Currently approval shows a textual change summary; native animation preview follows application.
 4. Add run, jump, hurt, and death, with transition and foot-contact checks. Existing clips use a simple deterministic gait and punch, not physics or inverse kinematics.
 5. Add broader platform testing. Windows Blockbench 5.2.2 is verified; macOS/Linux and the web editor are not.

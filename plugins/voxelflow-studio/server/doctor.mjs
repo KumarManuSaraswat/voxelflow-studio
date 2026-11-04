@@ -17771,7 +17771,7 @@ try {
     });
     const tools = await client.listTools();
     const prompts = await client.listPrompts();
-    const required2 = ["get_editor_status", "create_prop", "inspect_project", "validate_asset", "get_operation", "apply_prop_materials", "export_asset"];
+    const required2 = ["get_editor_status", "edit_parts", "create_prop", "inspect_project", "validate_asset", "get_operation", "apply_prop_materials", "export_asset"];
     const available = required2.every((name) => tools.tools.some((tool) => tool.name === name)) && prompts.prompts.some((prompt) => prompt.name === "create_minecraft_asset");
     record2(stage, available, `${tools.tools.length} tools, ${prompts.prompts.length} prompts${available ? "" : "; required modeling tools are missing. Re-extract the desktop ZIP."}`);
     stage = "Live Blockbench";

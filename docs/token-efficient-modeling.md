@@ -38,8 +38,10 @@ Run `npm run measure:payloads`. It compares minified JSON character counts for e
 | Example | Explicit/full | Compact/summary | Reduction |
 | --- | ---: | ---: | ---: |
 | Eight-rung creation spec | 772 | 225 | 70.9% |
-| Bag inspection geometry | 4,882 | 262 | 94.6% |
-| Staff inspection geometry | 2,669 | 198 | 92.6% |
+| Bag inspection geometry | 5,923 | 262 | 95.6% |
+| Staff inspection geometry | 3,193 | 198 | 93.8% |
+
+These 0.3.5 builder-fixture measurements include part IDs and box-UV flags in full inspection. Live Blockbench IDs are longer than the fixture's names, so actual inspection sizes differ. Small revisions can use [individual part edits](editing-parts.md) and send only affected fields instead of a complete creation blueprint; a fresh full inspection is still needed to identify the targets.
 
 These are payload character counts, **not measured token counts or billing reductions**. The creation comparison omits defaults in both inputs and produces identical geometry. Inspection summaries intentionally omit coordinates, which remain available through full inspection. Tool schemas, other result fields, conversation history, reasoning and retries are outside these measurements. The repeat schema adds some discovery overhead; designs without repetition benefit primarily from shorter inspections. Actual savings depend on the model and host.
 

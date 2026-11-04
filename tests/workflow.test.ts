@@ -1,11 +1,36 @@
 import {beforeEach,afterEach,describe,it,expect,vi} from 'vitest';
-const adapter=vi.hoisted(()=>({sceneStamp:vi.fn(()=> 'project-a:1'),createRobot:vi.fn(()=>({cubes:43})),createProp:vi.fn(()=>({kind:'prop',cubes:28})),applyPropMaterials:vi.fn(),applyMaterials:vi.fn(),mapRig:vi.fn(),animate:vi.fn(),exportLive:vi.fn(()=>({cancelled:true})),undoLast:vi.fn(),editorStatus:vi.fn(),inspectProject:vi.fn(),captureAsset:vi.fn(),preview:vi.fn()}));
+const adapter=vi.hoisted(()=>({describePartEdits:vi.fn(()=> 'Move front pocket by 0, 2, 0'),editParts:vi.fn(()=>({edited:1})),sceneStamp:vi.fn(()=> 'project-a:1'),createRobot:vi.fn(()=>({cubes:43})),createProp:vi.fn(()=>({kind:'prop',cubes:28})),applyPropMaterials:vi.fn(),applyMaterials:vi.fn(),mapRig:vi.fn(),animate:vi.fn(),exportLive:vi.fn(()=>({cancelled:true})),undoLast:vi.fn(),editorStatus:vi.fn(),inspectProject:vi.fn(),captureAsset:vi.fn(),preview:vi.fn()}));
 vi.mock('../packages/blockbench-plugin/src/editor/adapter',()=>adapter);
 import {Workflow} from '../packages/blockbench-plugin/src/editor/workflow';
 import {propPreset} from '../packages/core/src/props';
 beforeEach(()=>{vi.clearAllMocks();adapter.sceneStamp.mockReturnValue('project-a:1');vi.stubGlobal('Blockbench',{setProgress:vi.fn(),showQuickMessage:vi.fn()});});
 afterEach(()=>vi.unstubAllGlobals());
 describe('approval-bound editor workflow',()=>{
+  it('approves part edits once and returns a completed retry even after switching tabs',async()=>{
+    const w=new Workflow(),args={request_id:crypto.randomUUID(),project_id:crypto.randomUUID(),edits:[{part_id:crypto.randomUUID(),move:[0,2,0]}]};
+    expect((await w.request('edit_parts',args,true)).ok).toBe(true);
+    expect(w.ledger.get(args.request_id).summary).toContain('front pocket');expect(adapter.editParts).not.toHaveBeenCalled();
+    await w.approve(args.request_id);expect(adapter.editParts).toHaveBeenCalledExactlyOnceWith(args.project_id,args.edits);
+    adapter.sceneStamp.mockReturnValue('another-project');
+    expect((await w.request('edit_parts',args,true)).data).toMatchObject({state:'applied'});
+    expect(adapter.describePartEdits).toHaveBeenCalledTimes(1);await w.approve(args.request_id);expect(adapter.editParts).toHaveBeenCalledTimes(1);
+    expect((await w.request('edit_parts',{...args,edits:[{...args.edits[0],move:[0,3,0]}]})).ok).toBe(false);
+  });
+  it.each(['stale','reject','cancel','disconnect'])('does not edit parts after %s',async(reason)=>{
+    const w=new Workflow(),args={request_id:crypto.randomUUID(),project_id:crypto.randomUUID(),edits:[{part_id:crypto.randomUUID(),move:[0,2,0]}]};
+    await w.request('edit_parts',args,true);
+    if(reason==='stale')adapter.sceneStamp.mockReturnValue('changed');
+    if(reason==='reject')w.reject(args.request_id);
+    if(reason==='cancel')await w.request('cancel_operation',{operation_id:args.request_id});
+    if(reason==='disconnect')w.disconnected();
+    await w.approve(args.request_id);expect(adapter.editParts).not.toHaveBeenCalled();expect(w.plans.size).toBe(0);
+    expect(w.ledger.get(args.request_id).state).toBe(reason==='stale'?'failed':reason==='reject'?'rejected':'cancelled');
+  });
+  it('rejects invalid part preflight without creating an approval',async()=>{
+    adapter.describePartEdits.mockImplementationOnce(()=>{throw Error('Part missing');});const w=new Workflow();
+    const result=await w.request('edit_parts',{request_id:crypto.randomUUID(),project_id:crypto.randomUUID(),edits:[{part_id:crypto.randomUUID(),move:[1,0,0]}]});
+    expect(result.ok).toBe(false);expect(w.ledger.list()).toEqual([]);expect(adapter.editParts).not.toHaveBeenCalled();
+  });
   it('approves the expanded pattern once and keeps retries idempotent',async()=>{
     const w=new Workflow(),request_id=crypto.randomUUID(),spec=propPreset('staff');
     const args={request_id,spec:{...spec,parts:[{name:'rung',from:[-4,0,-1],to:[4,1,1],material:'gold',repeat:{count:8,step:[0,3,0]}}]}};

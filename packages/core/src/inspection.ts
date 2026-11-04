@@ -4,7 +4,7 @@ import { Asset } from './schema';
 export function inspectGeometry(asset:Asset,detail:'summary'|'full'='summary') {
   if(detail==='full')return {
     cubes:asset.cubes.length,bones:asset.bones,
-    ...(asset.kind==='prop'?{parts:asset.cubes.map(c=>({name:c.name,group:c.bone,from:c.from,to:c.to,pivot:c.origin,rotation:c.rotation,uv:c.faces.north.uv}))}:{})
+    parts:asset.cubes.map(c=>({id:c.id,name:c.name,group:c.bone,from:c.from,to:c.to,pivot:c.origin,rotation:c.rotation,uv:c.faces.north.uv,boxUv:c.boxUv??false}))
   };
   const counts=new Map<string,number>(asset.bones.map(b=>[b.name,0]));
   for(const cube of asset.cubes)counts.set(cube.bone,(counts.get(cube.bone)??0)+1);

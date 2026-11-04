@@ -1,0 +1,20 @@
+{
+  "version": "0.3.5",
+  "date": "2026-11-04",
+  "platform": "Windows",
+  "transport": "Official MCP SDK to local companion and actual Blockbench desktop",
+  "fixture": "Separate part_edit_test bag tab with 28 cubes",
+  "operation": "Move front_pocket by [0, 2, 0] after native approval",
+  "sameProjectId": true,
+  "sameCubeIds": true,
+  "otherPartsAndBonesUnchanged": true,
+  "inspectedUvAndTextureSummariesUnchanged": true,
+  "identicalRetryDidNotApplyTwice": true,
+  "validation": { "passed": 5, "warning": 1, "failed": 0 },
+  "nativeUndoRestoredCompleteInspection": true,
+  "limitations": [
+    "Translation and Undo only in this live smoke test; other edit types covered by automated tests",
+    "Texture pixels tested with editor doubles; live check compared inspected UVs and texture summaries",
+    "No fresh-account natural-language ChatGPT test or Minecraft runtime test"
+  ]
+}

@@ -1,8 +1,8 @@
 {
-  "version": "0.3.4",
+  "version": "0.3.5",
   "archiveFiles": 20,
   "nodeModulesRequired": false,
-  "mcpTools": 14,
+  "mcpTools": 15,
   "mcpPrompts": 2,
   "disconnectedReportedHonestly": true,
   "invalidInputRejected": true,

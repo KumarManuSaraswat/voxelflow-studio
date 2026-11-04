@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.5 — Individual part edits (unreleased)
+
+- Add `edit_parts` to move, resize, rotate, adjust cube pivots, or assign existing prop materials without recreating the model.
+- Expose stable cube IDs in full inspection for prop and humanoid projects.
+- Bind batch edits to native approval, exact project identity, stale-scene checks, and one native Undo transaction; reject invalid batches and roll back failures.
+- Preserve geometry-only texture mapping and pixels; explicitly describe material reassignment and protect box-UV resizing.
+- Update modeling guidance and add planner, editor transaction, approval, and MCP protocol regression tests.
+
+See [individual part editing](docs/editing-parts.md).
+
 ## 0.3.4 — Token-efficient modeling
 
 - Expand repeated prop cubes locally with optional `repeat: {count, step}` instructions, preserving ordinary editable geometry and approval.
